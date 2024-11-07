@@ -1,0 +1,5 @@
+*.pdf
+*.txt
+*.ipynb
+/__pycache__
+*.env copy
