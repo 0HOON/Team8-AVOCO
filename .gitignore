@@ -1,5 +1,7 @@
 *.pdf
-*.txt
 *.ipynb
-/__pycache__
 *.env copy
+*.venv
+/venv
+/__pycache__
+pyproject.toml
