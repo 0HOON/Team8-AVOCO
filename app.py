@@ -29,10 +29,10 @@ load_dotenv()
 ## TODO 결과 복사 버튼 만들기
 
 instructions = {
-  "review_summary": "Summarize each reviews in a form like '*review 1*: ..., *review 2*: ...'. Each summarization should be about 3 sentences. Then, based on the reviews, recommend which pages of the paper should I read to effectively understand the opinions of the reviewers. Recommendation should be like '*Important Pages*: ...'",
-  "inconsistency_summary": "Find any inconsistency between reviewers and describe in 5 sentences. list them like '*inconsistency1*: ..., *inconsistency2*: ...'.Then recommend which page of the paper should I read to effectively resolve the inconsistency. Recommendation should be like '*Important Pages*: ...'. If there is no inconsistency at all, just answer no.",
-  "discussion_summary": "Summarize each discussion in 5 sentences. Here 'discussion' means a review and the replies for that review. Each summary should list brief summary of the review, main points of the discussion, and whether the reply of authors was appropriate."
-}
+  "review_summary": "Summarize each reviews in a form like '**Review 1**: ..., **Review 2**: ...'. Each summary should be about 3 sentences. Then, based on the reviews, recommend which pages of the paper should I read to effectively understand the opinions of the reviewers. Recommendation should be like '**Important Pages**: ...'",
+  "inconsistency_summary": "Find any inconsistency between reviewers and summarize it in a form like '**Inconsistency 1**: ..., **Inconsistency 2**: ...'. Each summary should be about 5 sentences. Then recommend which page of the paper should I read to effectively resolve the inconsistency. Recommendation should be like '**Important Pages**: ...'. If there is no inconsistency at all, just answer no.",
+  "discussion_summary": "Summarize each discussion a form like '**Discussion 1**: ..., **Discussion 2**: ...'. Each summary should be about 5 sentences. Here 'discussion' means a review and the replies for that review. Each summary should list brief summary of the review, main points of the discussion, and whether the reply of authors was appropriate."
+} 
 
 def get_reviews_and_pdf_from_url(url, venue_id="ICLR.cc/2023/Conference"):
   client = openreview.Client()
