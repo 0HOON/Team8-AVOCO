@@ -32,6 +32,7 @@ def get_reviews_and_pdf_from_url(url, venue_id="ICLR.cc/2023/Conference"):
   st.session_state.title = paper_info.content['title']
   st.session_state.authors = paper_info.content['authors']
   st.session_state.keywords = paper_info.content['keywords']
+  st.session_state.abstract = paper_info.content['abstract']
 
   reviews = client.get_notes(replyto=paper_id, details='replies')
   pdf = client.get_pdf(paper_id)
