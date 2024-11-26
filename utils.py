@@ -23,6 +23,57 @@ instructions = {
   "discussion_summary": "Summarize each discussion a form like '**Discussion 1**: ..., **Discussion 2**: ...'. Each summary should be about 5 sentences. Here 'discussion' means a review and the replies for that review. Each summary should list brief summary of the review, main points of the discussion, and whether the reply of authors was appropriate."
 } 
 
+class NoteNode:
+  def __init__(self, note):
+    '''
+      TreeNode for openreview Notes
+    '''
+    self.id = note.id
+    self.title = note.content.get('title')
+    self.writer = note.writers[-1].split('/')[-1]
+    self.content = note.content
+    self.replyto = note.replyto
+    self.replies = []
+  
+  def add_reply(self, node):
+    if self.id == node.replyto:
+      self.replies.append(node)
+      node.replyto = self
+      return True
+
+    if len(self.replies) > 0:
+      for rep in self.replies:
+        if rep.add_reply(node):
+          return True
+      return False
+    else:
+      return False
+
+  def get_text(self, level):
+    text = ''
+    if self.title: # reply
+      if self.replyto is not None: # else root
+        text += f"\n{'#'*level} {self.writer}'s reply to {self.replyto.writer}\n"
+        text += f"title: {self.title}\n"
+        text += f"comment: {self.content['comment']}\n"    
+    else: # review
+      text += f"\n\n\n# Review from {self.writer}\n"
+      text += "\n\n## Summary of the paper\n"
+      text += self.content['summary_of_the_paper']
+      text += "\n\n## Strength and Weaknesses\n"
+      text += self.content['strength_and_weaknesses']
+      text += "\n\n## Clarity, Quality, Novelty And Reproducibility\n"
+      text += self.content['clarity,_quality,_novelty_and_reproducibility']
+      text += "\n\n## Summary of the review\n"
+      text += self.content['summary_of_the_review']
+      text += "\n\n"
+
+    for rep in self.replies:
+      text += rep.get_text(level+1)
+      
+    return text
+  
+
 def get_reviews_and_pdf_from_url(url, venue_id="ICLR.cc/2023/Conference"):
   client = openreview.Client()
   paper_id = url.split('=')[-1]
@@ -34,29 +85,18 @@ def get_reviews_and_pdf_from_url(url, venue_id="ICLR.cc/2023/Conference"):
   st.session_state.keywords = paper_info.content['keywords']
   st.session_state.abstract = paper_info.content['abstract']
 
-  reviews = client.get_notes(replyto=paper_id, details='replies')
+  reviews = sorted(client.get_all_notes(forum=paper_id), key=lambda x: x.cdate)
   pdf = client.get_pdf(paper_id)
   return reviews, pdf
     
 def get_reviews_text(reviews):
-  text = ""
-  reviews = [review for review in reviews if 'title' not in review.content]
-  for i, review in enumerate(reviews):
-    text += f"\n\n\n#### Review {i+1} ####\n"
-    text += "\n\n# Summary of the paper\n"
-    text += review.content['summary_of_the_paper']
-    text += "\n\n# Strength and Weaknesses\n"
-    text += review.content['strength_and_weaknesses']
-    text += "\n\n# Clarity, Quality, Novelty And Reproducibility\n"
-    text += review.content['clarity,_quality,_novelty_and_reproducibility']
-    text += "\n\n# Summary of the review\n"
-    text += review.content['summary_of_the_review']
-    text += "\n\n"
-    for j, reply in enumerate(review.details['replies']):
-      text += f"\n## Reply {j+1}\n"
-      text += reply['content']['comment']
-      
-  return text
+  root = NoteNode(reviews[0])
+  for note in reviews[1:]:
+    if note.content.get('title') and 'Decision'in note.content['title']:
+      break
+    node = NoteNode(note)
+    root.add_reply(node)
+  return root.get_text(0)
 
 def get_pdf_text(pdf):
   text = ""
