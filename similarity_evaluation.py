@@ -209,7 +209,7 @@ def main(args):
         
 
     elif eval_mode =="SBERT":
-        model_name = "all-distilroberta-v1" # ["all-MiniLM-L6-v2", "multi-qa-mpnet-base-dot-v1", "all-distilroberta-v1"]
+        model_name = "multi-qa-mpnet-base-dot-v1" # ["all-MiniLM-L6-v2", "multi-qa-mpnet-base-dot-v1", "all-distilroberta-v1"]
         assert model_name in SBERT_MODELS
         true_embed = get_SBERT_embedding(model_name, true_metareview)
         embed = get_SBERT_embedding(model_name, input_text)
@@ -240,7 +240,7 @@ def append_to_json_file(data, file_path):
 
 def run_all_combinations(url, output_file):
     # Define possible configurations
-    eval_modes = ["SBERT"] #["BERT", "SBERT", "simCSE"]
+    eval_modes = ["BERT", "SBERT", "simCSE"] #["SBERT"]
     AC_types = ["inclusive", "conformist", "authoritarian", "BASELINE"]
     MV_helpers = [True, False]
 
