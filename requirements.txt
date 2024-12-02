@@ -6,6 +6,7 @@ langchain-core
 langchain-community
 langchain-openai
 langchain-huggingface
-langgraph
 openreview-py
 faiss-cpu
+pandas
+altair[all]

@@ -16,12 +16,69 @@ from langchain_huggingface import HuggingFaceEmbeddings
 
 import openreview
 
+import fitz
+
 
 instructions = {
   "review_summary": "Summarize each reviews in a form like '**Review 1**: ..., **Review 2**: ...'. Each summary should be about 3 sentences. Then, based on the reviews, recommend which pages of the paper should I read to effectively understand the opinions of the reviewers. Recommendation should be like '**Important Pages**: ...'",
   "inconsistency_summary": "Find any inconsistency between reviewers and summarize it in a form like '**Inconsistency 1**: ..., **Inconsistency 2**: ...'. Each summary should be about 5 sentences. Then recommend which page of the paper should I read to effectively resolve the inconsistency. Recommendation should be like '**Important Pages**: ...'. If there is no inconsistency at all, just answer no.",
-  "discussion_summary": "Summarize each discussion a form like '**Discussion 1**: ..., **Discussion 2**: ...'. Each summary should be about 5 sentences. Here 'discussion' means a review and the replies for that review. Each summary should list brief summary of the review, main points of the discussion, and whether the reply of authors was appropriate."
+  "discussion_summary": "Summarize each discussion a form like '**Discussion 1**: ..., **Discussion 2**: ...'. Each summary should be about 5 sentences. Here 'discussion' means a review and the replies for that review. Each summary should list brief summary of the review, main points of the discussion, and whether the reply of authors was appropriate.",
+  "find_inconsistency_in_pdf": "You are a research assistant tasked with identifying the exact text from a research paper corresponding to a specific description of its content. You will be provided with two inputs: Paper Text: The full text of the paper (paper_text). \
+    Inconsistency Text: A description of a section or part of the paper where inconsistencies in reviews are observed (inconsistency_text). \
+      Your goal is to: Find the exact text from the paper_text that matches or is most relevant to the inconsistency_text. Return only the relevant text as it appears in the paper_text without any additional explanations or modifications. Please exclude any mathematical expressions, and make sure to extract the exact text from the paper text without any modifications. \
+        Returns form like '{**'Inconsistency 1'**: ..., **'Inconsistency 2'**: ...} "
 } 
+
+class NoteNode:
+  def __init__(self, note):
+    '''
+      TreeNode for openreview Notes
+    '''
+    self.id = note.id
+    self.title = note.content.get('title')
+    self.writer = note.writers[-1].split('/')[-1]
+    self.content = note.content
+    self.replyto = note.replyto
+    self.replies = []
+  
+  def add_reply(self, node):
+    if self.id == node.replyto:
+      self.replies.append(node)
+      node.replyto = self
+      return True
+
+    if len(self.replies) > 0:
+      for rep in self.replies:
+        if rep.add_reply(node):
+          return True
+      return False
+    else:
+      return False
+
+  def get_text(self, level):
+    text = ''
+    if self.title: # reply
+      if self.replyto is not None: # else root
+        text += f"\n{'#'*level} {self.writer}'s reply to {self.replyto.writer}\n"
+        text += f"title: {self.title}\n"
+        text += f"comment: {self.content['comment']}\n"    
+    else: # review
+      text += f"\n\n\n# Review from {self.writer}\n"
+      text += "\n\n## Summary of the paper\n"
+      text += self.content['summary_of_the_paper']
+      text += "\n\n## Strength and Weaknesses\n"
+      text += self.content['strength_and_weaknesses']
+      text += "\n\n## Clarity, Quality, Novelty And Reproducibility\n"
+      text += self.content['clarity,_quality,_novelty_and_reproducibility']
+      text += "\n\n## Summary of the review\n"
+      text += self.content['summary_of_the_review']
+      text += "\n\n"
+
+    for rep in self.replies:
+      text += rep.get_text(level+1)
+      
+    return text
+  
 
 def get_reviews_and_pdf_from_url(url, venue_id="ICLR.cc/2023/Conference"):
   client = openreview.Client()
@@ -32,30 +89,20 @@ def get_reviews_and_pdf_from_url(url, venue_id="ICLR.cc/2023/Conference"):
   st.session_state.title = paper_info.content['title']
   st.session_state.authors = paper_info.content['authors']
   st.session_state.keywords = paper_info.content['keywords']
+  st.session_state.abstract = paper_info.content['abstract']
 
-  reviews = client.get_notes(replyto=paper_id, details='replies')
+  reviews = sorted(client.get_all_notes(forum=paper_id), key=lambda x: x.cdate)
   pdf = client.get_pdf(paper_id)
   return reviews, pdf
     
 def get_reviews_text(reviews):
-  text = ""
-  reviews = [review for review in reviews if 'title' not in review.content]
-  for i, review in enumerate(reviews):
-    text += f"\n\n\n#### Review {i+1} ####\n"
-    text += "\n\n# Summary of the paper\n"
-    text += review.content['summary_of_the_paper']
-    text += "\n\n# Strength and Weaknesses\n"
-    text += review.content['strength_and_weaknesses']
-    text += "\n\n# Clarity, Quality, Novelty And Reproducibility\n"
-    text += review.content['clarity,_quality,_novelty_and_reproducibility']
-    text += "\n\n# Summary of the review\n"
-    text += review.content['summary_of_the_review']
-    text += "\n\n"
-    for j, reply in enumerate(review.details['replies']):
-      text += f"\n## Reply {j+1}\n"
-      text += reply['content']['comment']
-      
-  return text
+  root = NoteNode(reviews[0])
+  for note in reviews[1:]:
+    if note.content.get('title') and 'Decision'in note.content['title']:
+      break
+    node = NoteNode(note)
+    root.add_reply(node)
+  return root.get_text(0)
 
 def get_pdf_text(pdf):
   text = ""
@@ -70,7 +117,7 @@ def get_texts_from_url(url):
   reviews_text = get_reviews_text(reviews)
   pdf_text = get_pdf_text(pdf)
 
-  return reviews_text, pdf_text
+  return reviews_text, pdf_text, pdf
 
 def get_text_chunks(raw_text):
   splitter = CharacterTextSplitter(
@@ -93,8 +140,10 @@ def format_docs(docs):
 
 def prepare_chain(url):
   with st.spinner("Collecting Paper Data"):
-    review_text, pdf_text = get_texts_from_url(url)
-    st.session_state.full_text = review_text    
+    review_text, pdf_text,pdf = get_texts_from_url(url)
+    st.session_state.full_text = review_text
+    st.session_state.paper_text = pdf_text
+    st.session_state.paper_pdf=pdf
     text_chunks = get_text_chunks(pdf_text)
   with st.spinner("Building Vector Store"):
     vectorstore = get_vectorstore(text_chunks)
@@ -119,3 +168,25 @@ def prepare_chain(url):
     )
 
   return prompt_chain
+
+def represent_pdf(search_strings):
+  pdf_document=fitz.open("pdf",st.session_state.paper_pdf)
+  for text in search_strings:
+      for page_num in range(len(pdf_document)):
+          page = pdf_document[page_num]
+          # 텍스트 검색 (출력 형식: [(x0, y0, x1, y1, "찾은 텍스트", idx), ...])
+          text_instances = page.search_for(text)
+          
+          if text_instances:
+              # 각 검색 결과에 대해 사각형 하이라이트 추가
+              for rect in text_instances:
+                  highlight = page.add_highlight_annot(rect)
+                  highlight.update()  # 업데이트 적용
+
+  # 하이라이트된 PDF 저장
+  output_filename = f"{st.session_state.title}_find_inconsistency.pdf"
+  pdf_document.save(output_filename)
+  pdf_document.close()
+  return output_filename
+  
+    

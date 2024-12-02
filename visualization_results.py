@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import json
 import pandas as pd
+import argparse
 
 
 
@@ -25,7 +26,7 @@ def save_figure_as_pdf(fig, file_path):
 
 
 
-def plot_bar_plots(df):
+def plot_bar_plots(df, seed):
     
     
     for eval_mode in EVAL_MODES:
@@ -78,16 +79,26 @@ def plot_bar_plots(df):
         # Adjust layout and save as PDF
         fig.suptitle(f"Similarity Score by AC_type for {eval_mode}")
         plt.tight_layout(rect=[0, 0, 1, 0.95])
-        fig_path = f"./{eval_mode}_comparison_subplots.pdf"
+        fig_path = f"./{eval_mode}_plots_{seed}.pdf"
         save_figure_as_pdf(fig=fig, file_path=fig_path)
 
 
 
-def main():
-    file_path = "./evaluation_results.json"
-    df = read_json_file(file_path=file_path)
+def main(args):
+    
+    df = read_json_file(file_path=args.output_file)
 
-    plot_bar_plots(df)
+    plot_bar_plots(df, args.seed)
 
 if __name__ == "__main__":
-    main()
+
+
+
+    parser = argparse.ArgumentParser()
+    
+    # Define arguments
+    parser.add_argument("--output_file", type=str, help="json evaluation file.", default ="./evaluation_results2.json")
+    parser.add_argument("--seed", type=int, help="seed.", required=True)
+    args = parser.parse_args()
+
+    main(args)
