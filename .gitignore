@@ -2,6 +2,7 @@
 *.ipynb
 *.env copy
 *.venv
+.env
 /venv
 /__pycache__
 pyproject.toml
