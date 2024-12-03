@@ -11,12 +11,14 @@ import argparse
 import itertools
 import json
 import os
+from dotenv import load_dotenv
 
-
+load_dotenv()
 
 BERT_MODELS = ["bert-base-uncased","bert-large-uncased", "bert-base-cased", "bert-large-cased" ] 
 SBERT_MODELS = ["all-MiniLM-L6-v2", "multi-qa-mpnet-base-dot-v1", "all-distilroberta-v1"]
 simCSE_MODELS = ["princeton-nlp/sup-simcse-bert-base-uncased"]
+OPENAI_MODELS = ["text-embedding-ada-002", "text-embedding-3-large"]
 
 def get_bert_embedding(model_name  :str, text : str) -> torch.Tensor:
     '''
@@ -46,7 +48,6 @@ def get_bert_embedding(model_name  :str, text : str) -> torch.Tensor:
 
     return mean_pooled_embeddings
 
-
 def get_bert_embedding_cls(model_name: str, text: str) -> torch.Tensor:
     '''
     get [cls] token embedding
@@ -69,16 +70,11 @@ def get_bert_embedding_cls(model_name: str, text: str) -> torch.Tensor:
 
     return cls_embedding
 
-
-
-
 def get_SBERT_embedding(model_name :str, sentence : str):
     model = SentenceTransformer(model_name)
     return model.encode(sentence)
 
 def get_simCSE_embedding(model_name  :str, text : str) ->torch.Tensor: 
-
-
     # Load the tokenizer and model
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     model = AutoModel.from_pretrained(model_name)
@@ -102,8 +98,6 @@ def get_simCSE_embedding(model_name  :str, text : str) ->torch.Tensor:
 
     return mean_pooled_embeddings
 
-
-
 def get_simCSE_embedding_cls(model_name: str, text: str) -> torch.Tensor:
 
     # Load the tokenizer and model
@@ -122,16 +116,19 @@ def get_simCSE_embedding_cls(model_name: str, text: str) -> torch.Tensor:
 
     return cls_embeddings
 
+def get_openai_embedding(model_name: str, text: str):
+    if model_name in OPENAI_MODELS:
+        client = OpenAI()
+        response = client.embeddings.create(input=[text], model=model_name)
+        embedding = torch.tensor(response.data[0].embedding, dtype=torch.float)
+        return embedding
+    else:
+        raise ValueError("Unsupported OpenAI model")
 
 def clean_text(input_text : str) -> str: 
     # Remove 'Score: 7' and leading/trailing whitespace
     cleaned_text = re.sub(r"Score: \d+\n\n", "", input_text).strip()
     return cleaned_text
-
-
-
-
-
 
 def get_true_metareivew_from_url(url, venue_id="ICLR.cc/2023/Conference") -> str:
     client = openreview.Client()
@@ -167,13 +164,12 @@ def format_sections_with_eos(input_text) -> str:
     formatted_text = f"Summary: {summary}<EOS>\nStrengths: {strengths}<EOS>\nWeakness: {weakness}<EOS>".strip()
     return formatted_text
 
-
 def main(args):
     
 
     #from args
     # url = "https://openreview.net/forum?id=3ULaIHxn9u7"
-    # eval_mode = "BERT" #BERT, SBERT, simCSE
+    # eval_mode = "BERT" #BERT, SBERT, simCSE, OpenAI
     # area_chair_type = "inclusive" # 'inclusive', 'conformist', 'authoritarian', 'BASELINE'
     # metareviewhelper = True # False
 
@@ -215,6 +211,13 @@ def main(args):
         embed = get_SBERT_embedding(model_name, input_text)
         sim_score = util.cos_sim(true_embed, embed).item()
 
+    elif eval_mode == "OpenAI":
+        model_name = "text-embedding-3-large"
+        assert model_name in OPENAI_MODELS
+        true_embed = get_openai_embedding(model_name, true_metareview)
+        embed = get_openai_embedding(model_name, input_text)
+        sim_score = cosine_similarity(true_embed.unsqueeze(0), embed.unsqueeze(0)).item()
+
     else: #simCSE
         model_name = "princeton-nlp/sup-simcse-bert-base-uncased"
         assert model_name in simCSE_MODELS
@@ -240,7 +243,7 @@ def append_to_json_file(data, file_path):
 
 def run_all_combinations(url, output_file):
     # Define possible configurations
-    eval_modes = ["BERT", "SBERT", "simCSE"] #["SBERT"]
+    eval_modes = ["BERT", "SBERT", "simCSE", "OpenAI"] #["SBERT"]
     AC_types = ["inclusive", "conformist", "authoritarian", "BASELINE"]
     MV_helpers = [True, False]
 
@@ -294,8 +297,8 @@ if __name__ == "__main__":
     
     # Define arguments
     parser.add_argument("--url", type=str, help="OpenReview forum URL.", default ="https://openreview.net/forum?id=3ULaIHxn9u7")
-    parser.add_argument("--eval_mode", type=str, choices=["BERT", "SBERT", "simCSE"], 
-                        help="Evaluation mode to use. Options: BERT, SBERT, simCSE.", default = "BERT")
+    parser.add_argument("--eval_mode", type=str, choices=["BERT", "SBERT", "simCSE", "OpenAI"], 
+                        help="Evaluation mode to use. Options: BERT, SBERT, simCSE, OpenAI.", default = "BERT")
     parser.add_argument("--AC_type", type=str, choices=["inclusive", "conformist", "authoritarian", "BASELINE"],
                          help="Area chair type. Options: inclusive, conformist, authoritarian, BASELINE.", default = "BASELINE")
     parser.add_argument("--MVhelper", action="store_true",
