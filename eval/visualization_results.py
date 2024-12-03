@@ -27,8 +27,8 @@ def save_figure_as_pdf(fig, file_path):
 
 
 def plot_bar_plots(df, seed):
-    
-    
+
+
     for eval_mode in EVAL_MODES:
         subset = df[df["eval_mode"] == eval_mode]
         ac_types = subset["AC_type"].unique()

@@ -130,7 +130,7 @@ def clean_text(input_text : str) -> str:
     cleaned_text = re.sub(r"Score: \d+\n\n", "", input_text).strip()
     return cleaned_text
 
-def get_true_metareivew_from_url(url, venue_id="ICLR.cc/2023/Conference") -> str:
+def get_true_metareview_from_url(url, venue_id="ICLR.cc/2023/Conference") -> str:
     client = openreview.Client()
     paper_id = url.split('=')[-1]
     paper_info = client.get_note(paper_id)
@@ -182,7 +182,7 @@ def main(args):
     
 
     #get ground truth metareview
-    true_metareview, decision = get_true_metareivew_from_url(url)
+    true_metareview, decision = get_true_metareview_from_url(url)
     print("True metareview")
     print(true_metareview)
 

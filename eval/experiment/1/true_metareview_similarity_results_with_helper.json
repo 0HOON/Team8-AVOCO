@@ -1,0 +1,362 @@
+[
+    {
+        "URL": "https://openreview.net/forum?id=N3kGYG3ZcTi",
+        "model_name": "text-embedding-3-large",
+        "AC_type": "INCLUSIVE",
+        "MV_helper": "with",
+        "score": 5.0,
+        "similarity_score": 0.33040425181388855,
+        "paper_decision": "Reject"
+    },
+    {
+        "URL": "https://openreview.net/forum?id=N3kGYG3ZcTi",
+        "model_name": "text-embedding-3-large",
+        "AC_type": "CONFORMIST",
+        "MV_helper": "with",
+        "score": 4.0,
+        "similarity_score": 0.3113662004470825,
+        "paper_decision": "Reject"
+    },
+    {
+        "URL": "https://openreview.net/forum?id=N3kGYG3ZcTi",
+        "model_name": "text-embedding-3-large",
+        "AC_type": "AUTHORITARIAN",
+        "MV_helper": "with",
+        "score": 6.0,
+        "similarity_score": 0.30775582790374756,
+        "paper_decision": "Reject"
+    },
+    {
+        "URL": "https://openreview.net/forum?id=N3kGYG3ZcTi",
+        "model_name": "text-embedding-3-large",
+        "AC_type": "BASELINE",
+        "MV_helper": "with",
+        "score": 5.0,
+        "similarity_score": 0.3015265464782715,
+        "paper_decision": "Reject"
+    },
+    {
+        "URL": "https://openreview.net/forum?id=0z_cXcu1N6o",
+        "model_name": "text-embedding-3-large",
+        "AC_type": "INCLUSIVE",
+        "MV_helper": "with",
+        "score": 7.0,
+        "similarity_score": 0.2769220173358917,
+        "paper_decision": "Reject"
+    },
+    {
+        "URL": "https://openreview.net/forum?id=0z_cXcu1N6o",
+        "model_name": "text-embedding-3-large",
+        "AC_type": "CONFORMIST",
+        "MV_helper": "with",
+        "score": 6.0,
+        "similarity_score": 0.31119710206985474,
+        "paper_decision": "Reject"
+    },
+    {
+        "URL": "https://openreview.net/forum?id=0z_cXcu1N6o",
+        "model_name": "text-embedding-3-large",
+        "AC_type": "AUTHORITARIAN",
+        "MV_helper": "with",
+        "score": 6.0,
+        "similarity_score": 0.3181880712509155,
+        "paper_decision": "Reject"
+    },
+    {
+        "URL": "https://openreview.net/forum?id=0z_cXcu1N6o",
+        "model_name": "text-embedding-3-large",
+        "AC_type": "BASELINE",
+        "MV_helper": "with",
+        "score": 6.0,
+        "similarity_score": 0.3003776967525482,
+        "paper_decision": "Reject"
+    },
+    {
+        "URL": "https://openreview.net/forum?id=9Zx6tTcX0SE",
+        "model_name": "text-embedding-3-large",
+        "AC_type": "INCLUSIVE",
+        "MV_helper": "with",
+        "score": 6.0,
+        "similarity_score": 0.34320467710494995,
+        "paper_decision": "Reject"
+    },
+    {
+        "URL": "https://openreview.net/forum?id=9Zx6tTcX0SE",
+        "model_name": "text-embedding-3-large",
+        "AC_type": "CONFORMIST",
+        "MV_helper": "with",
+        "score": 6.0,
+        "similarity_score": 0.36281323432922363,
+        "paper_decision": "Reject"
+    },
+    {
+        "URL": "https://openreview.net/forum?id=9Zx6tTcX0SE",
+        "model_name": "text-embedding-3-large",
+        "AC_type": "AUTHORITARIAN",
+        "MV_helper": "with",
+        "score": 6.0,
+        "similarity_score": 0.3512500524520874,
+        "paper_decision": "Reject"
+    },
+    {
+        "URL": "https://openreview.net/forum?id=9Zx6tTcX0SE",
+        "model_name": "text-embedding-3-large",
+        "AC_type": "BASELINE",
+        "MV_helper": "with",
+        "score": 5.0,
+        "similarity_score": 0.3877261281013489,
+        "paper_decision": "Reject"
+    },
+    {
+        "URL": "https://openreview.net/forum?id=3uDXZZLBAwd",
+        "model_name": "text-embedding-3-large",
+        "AC_type": "INCLUSIVE",
+        "MV_helper": "with",
+        "score": 6.0,
+        "similarity_score": 0.2513841688632965,
+        "paper_decision": "Reject"
+    },
+    {
+        "URL": "https://openreview.net/forum?id=3uDXZZLBAwd",
+        "model_name": "text-embedding-3-large",
+        "AC_type": "CONFORMIST",
+        "MV_helper": "with",
+        "score": 5.0,
+        "similarity_score": 0.25855857133865356,
+        "paper_decision": "Reject"
+    },
+    {
+        "URL": "https://openreview.net/forum?id=3uDXZZLBAwd",
+        "model_name": "text-embedding-3-large",
+        "AC_type": "AUTHORITARIAN",
+        "MV_helper": "with",
+        "score": 5.0,
+        "similarity_score": 0.2814244031906128,
+        "paper_decision": "Reject"
+    },
+    {
+        "URL": "https://openreview.net/forum?id=3uDXZZLBAwd",
+        "model_name": "text-embedding-3-large",
+        "AC_type": "BASELINE",
+        "MV_helper": "with",
+        "score": 6.0,
+        "similarity_score": 0.30253684520721436,
+        "paper_decision": "Reject"
+    },
+    {
+        "URL": "https://openreview.net/forum?id=Xj9V-stmIcO",
+        "model_name": "text-embedding-3-large",
+        "AC_type": "INCLUSIVE",
+        "MV_helper": "with",
+        "score": 6.0,
+        "similarity_score": 0.3100752532482147,
+        "paper_decision": "Reject"
+    },
+    {
+        "URL": "https://openreview.net/forum?id=Xj9V-stmIcO",
+        "model_name": "text-embedding-3-large",
+        "AC_type": "CONFORMIST",
+        "MV_helper": "with",
+        "score": 5.0,
+        "similarity_score": 0.32807058095932007,
+        "paper_decision": "Reject"
+    },
+    {
+        "URL": "https://openreview.net/forum?id=Xj9V-stmIcO",
+        "model_name": "text-embedding-3-large",
+        "AC_type": "AUTHORITARIAN",
+        "MV_helper": "with",
+        "score": 6.0,
+        "similarity_score": 0.31905198097229004,
+        "paper_decision": "Reject"
+    },
+    {
+        "URL": "https://openreview.net/forum?id=Xj9V-stmIcO",
+        "model_name": "text-embedding-3-large",
+        "AC_type": "BASELINE",
+        "MV_helper": "with",
+        "score": 5.0,
+        "similarity_score": 0.3525277078151703,
+        "paper_decision": "Reject"
+    },
+    {
+        "URL": "https://openreview.net/forum?id=4F1gvduDeL",
+        "model_name": "text-embedding-3-large",
+        "AC_type": "INCLUSIVE",
+        "MV_helper": "with",
+        "score": 7.0,
+        "similarity_score": 0.784508466720581,
+        "paper_decision": "Accept: notable-top-25%"
+    },
+    {
+        "URL": "https://openreview.net/forum?id=4F1gvduDeL",
+        "model_name": "text-embedding-3-large",
+        "AC_type": "CONFORMIST",
+        "MV_helper": "with",
+        "score": 7.0,
+        "similarity_score": 0.7836781740188599,
+        "paper_decision": "Accept: notable-top-25%"
+    },
+    {
+        "URL": "https://openreview.net/forum?id=4F1gvduDeL",
+        "model_name": "text-embedding-3-large",
+        "AC_type": "AUTHORITARIAN",
+        "MV_helper": "with",
+        "score": 8.0,
+        "similarity_score": 0.7863762974739075,
+        "paper_decision": "Accept: notable-top-25%"
+    },
+    {
+        "URL": "https://openreview.net/forum?id=4F1gvduDeL",
+        "model_name": "text-embedding-3-large",
+        "AC_type": "BASELINE",
+        "MV_helper": "with",
+        "score": 7.0,
+        "similarity_score": 0.7821760177612305,
+        "paper_decision": "Accept: notable-top-25%"
+    },
+    {
+        "URL": "https://openreview.net/forum?id=6BHlZgyPOZY",
+        "model_name": "text-embedding-3-large",
+        "AC_type": "INCLUSIVE",
+        "MV_helper": "with",
+        "score": 7.0,
+        "similarity_score": 0.28788354992866516,
+        "paper_decision": "Accept: notable-top-25%"
+    },
+    {
+        "URL": "https://openreview.net/forum?id=6BHlZgyPOZY",
+        "model_name": "text-embedding-3-large",
+        "AC_type": "CONFORMIST",
+        "MV_helper": "with",
+        "score": 6.0,
+        "similarity_score": 0.33862122893333435,
+        "paper_decision": "Accept: notable-top-25%"
+    },
+    {
+        "URL": "https://openreview.net/forum?id=6BHlZgyPOZY",
+        "model_name": "text-embedding-3-large",
+        "AC_type": "AUTHORITARIAN",
+        "MV_helper": "with",
+        "score": 7.0,
+        "similarity_score": 0.33013468980789185,
+        "paper_decision": "Accept: notable-top-25%"
+    },
+    {
+        "URL": "https://openreview.net/forum?id=6BHlZgyPOZY",
+        "model_name": "text-embedding-3-large",
+        "AC_type": "BASELINE",
+        "MV_helper": "with",
+        "score": 7.0,
+        "similarity_score": 0.3090646266937256,
+        "paper_decision": "Accept: notable-top-25%"
+    },
+    {
+        "URL": "https://openreview.net/forum?id=dKkMnCWfVmm",
+        "model_name": "text-embedding-3-large",
+        "AC_type": "INCLUSIVE",
+        "MV_helper": "with",
+        "score": 6.0,
+        "similarity_score": 0.3505054712295532,
+        "paper_decision": "Accept: notable-top-25%"
+    },
+    {
+        "URL": "https://openreview.net/forum?id=dKkMnCWfVmm",
+        "model_name": "text-embedding-3-large",
+        "AC_type": "CONFORMIST",
+        "MV_helper": "with",
+        "score": 6.0,
+        "similarity_score": 0.34603914618492126,
+        "paper_decision": "Accept: notable-top-25%"
+    },
+    {
+        "URL": "https://openreview.net/forum?id=dKkMnCWfVmm",
+        "model_name": "text-embedding-3-large",
+        "AC_type": "AUTHORITARIAN",
+        "MV_helper": "with",
+        "score": 7.0,
+        "similarity_score": 0.3630278408527374,
+        "paper_decision": "Accept: notable-top-25%"
+    },
+    {
+        "URL": "https://openreview.net/forum?id=dKkMnCWfVmm",
+        "model_name": "text-embedding-3-large",
+        "AC_type": "BASELINE",
+        "MV_helper": "with",
+        "score": 6.0,
+        "similarity_score": 0.37375608086586,
+        "paper_decision": "Accept: notable-top-25%"
+    },
+    {
+        "URL": "https://openreview.net/forum?id=7YfHla7IxBJ",
+        "model_name": "text-embedding-3-large",
+        "AC_type": "INCLUSIVE",
+        "MV_helper": "with",
+        "score": 8.0,
+        "similarity_score": 0.38061243295669556,
+        "paper_decision": "Accept: notable-top-5%"
+    },
+    {
+        "URL": "https://openreview.net/forum?id=7YfHla7IxBJ",
+        "model_name": "text-embedding-3-large",
+        "AC_type": "CONFORMIST",
+        "MV_helper": "with",
+        "score": 8.0,
+        "similarity_score": 0.37936413288116455,
+        "paper_decision": "Accept: notable-top-5%"
+    },
+    {
+        "URL": "https://openreview.net/forum?id=7YfHla7IxBJ",
+        "model_name": "text-embedding-3-large",
+        "AC_type": "AUTHORITARIAN",
+        "MV_helper": "with",
+        "score": 8.0,
+        "similarity_score": 0.3457522690296173,
+        "paper_decision": "Accept: notable-top-5%"
+    },
+    {
+        "URL": "https://openreview.net/forum?id=7YfHla7IxBJ",
+        "model_name": "text-embedding-3-large",
+        "AC_type": "BASELINE",
+        "MV_helper": "with",
+        "score": 8.0,
+        "similarity_score": 0.3748006820678711,
+        "paper_decision": "Accept: notable-top-5%"
+    },
+    {
+        "URL": "https://openreview.net/forum?id=KRLUvxh8uaX",
+        "model_name": "text-embedding-3-large",
+        "AC_type": "INCLUSIVE",
+        "MV_helper": "with",
+        "score": 7.0,
+        "similarity_score": 0.3423301577568054,
+        "paper_decision": "Accept: notable-top-5%"
+    },
+    {
+        "URL": "https://openreview.net/forum?id=KRLUvxh8uaX",
+        "model_name": "text-embedding-3-large",
+        "AC_type": "CONFORMIST",
+        "MV_helper": "with",
+        "score": 8.0,
+        "similarity_score": 0.3440687954425812,
+        "paper_decision": "Accept: notable-top-5%"
+    },
+    {
+        "URL": "https://openreview.net/forum?id=KRLUvxh8uaX",
+        "model_name": "text-embedding-3-large",
+        "AC_type": "AUTHORITARIAN",
+        "MV_helper": "with",
+        "score": 6.0,
+        "similarity_score": 0.39076805114746094,
+        "paper_decision": "Accept: notable-top-5%"
+    },
+    {
+        "URL": "https://openreview.net/forum?id=KRLUvxh8uaX",
+        "model_name": "text-embedding-3-large",
+        "AC_type": "BASELINE",
+        "MV_helper": "with",
+        "score": 7.0,
+        "similarity_score": 0.3658676743507385,
+        "paper_decision": "Accept: notable-top-5%"
+    }
+]

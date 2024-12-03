@@ -1,14 +1,10 @@
 import re
 import functions
-import matplotlib.pyplot as plt
-import numpy as np
 from dotenv import load_dotenv
-from langchain_core.runnables import RunnablePassthrough
-from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_openai import ChatOpenAI
-from langgraph.graph import MessagesState, StateGraph
-from langgraph.checkpoint.memory import MemorySaver
+from similarity_evaluation import clean_text
+
 
 load_dotenv()
 
@@ -260,7 +256,7 @@ def generate_metareview_all_ac_type(url: str, metareviewhelper: bool) -> list:
     Generates meta-reviews for all types of area chairs.
     :param url: URL to fetch paper content and reviews.
     :param metareviewhelper: Boolean flag to include meta-review assistance.
-    :return: List of tuples containing scores and meta-reviews for all area chair types.
+    :return: List of tuples containing scores, meta-reviews, and whether the helper was used for all area chair types.
     """
     area_chair_types = ['INCLUSIVE', 'CONFORMIST', 'AUTHORITARIAN', 'BASELINE']
     texts = functions.get_texts_from_url(url)
@@ -271,59 +267,13 @@ def generate_metareview_all_ac_type(url: str, metareviewhelper: bool) -> list:
     prompt += add_area_chair_description("ALL")
     prompt += add_combined_output_format(area_chair_types)
     response = generate_metareview_from_chain(prompt)
-    print(response)
     results = extract_multiple_scores_and_reviews(response, area_chair_types)
+
+    # Clean the metareview text
+    results = [(url, ac_type, score, clean_text(metareview), metareviewhelper) for (ac_type, score, metareview) in results]
 
     return results
 
-# Example code that compares the score variance across different area chair types with metareviewhelper True and False
-def calculate_ac_type_variances(results):
-    ac_type_scores = {}
-    for ac_type, score, _ in results:
-        if ac_type not in ac_type_scores:
-            ac_type_scores[ac_type] = []
-        if score is not None:
-            ac_type_scores[ac_type].append(score)
-    
-    # Calculate mean scores and variances
-    mean_scores = {ac_type: np.mean(scores) for ac_type, scores in ac_type_scores.items()}
-    variances = {ac_type: np.var(scores) for ac_type, scores in ac_type_scores.items()}
-    
-    return mean_scores, variances
-
-def plot_ac_type_scores(results_true, results_false, area_chair_types, output_file='ac_type_scores.pdf'):
-    # Calculate variances and mean scores for both metareviewhelper True and False
-    mean_scores_true, variances_true = calculate_ac_type_variances(results_true)
-    mean_scores_false, variances_false = calculate_ac_type_variances(results_false)
-
-    print("variances_true : ", variances_true)
-    print("\n")
-    print("variances_false : ", variances_false)
-
-
-    # Set up the plots
-    fig, axs = plt.subplots(1, 2, figsize=(15, 6))
-    
-    # Left plot: Mean scores for metareviewhelper=True
-    axs[0].bar(area_chair_types, [mean_scores_true[ac_type] for ac_type in area_chair_types])
-    axs[0].set_title('Average Scores with MetaReviewHelper=True')
-    axs[0].set_ylabel('Average Score')
-    axs[0].set_xlabel('Area Chair Type')
-    axs[0].set_ylim(0, 10)
-    axs[0].set_xticklabels(area_chair_types, rotation=45)
-    
-    # Right plot: Mean scores for metareviewhelper=False
-    axs[1].bar(area_chair_types, [mean_scores_false[ac_type] for ac_type in area_chair_types])
-    axs[1].set_title('Average Scores with MetaReviewHelper=False')
-    axs[1].set_ylabel('Average Score')
-    axs[1].set_xlabel('Area Chair Type')
-    axs[1].set_ylim(0, 10)
-    axs[1].set_xticklabels(area_chair_types, rotation=45)
-
-    # Display the plots
-    plt.tight_layout()
-    plt.savefig(output_file)
-    plt.show()
 
 # Example usage of the plotting function
 def main():
@@ -350,9 +300,6 @@ def main():
         
         results_true_all.extend(results_true)
         results_false_all.extend(results_false)
-
-    # Plotting the scores
-    plot_ac_type_scores(results_true_all, results_false_all, area_chair_types, output_file='ac_type_scores.pdf')
 
 if __name__ == "__main__":
     main()
