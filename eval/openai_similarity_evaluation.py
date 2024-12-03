@@ -74,8 +74,8 @@ def plot_similarity_scores(results_with_helper, results_without_helper, ac_types
     # Plotting the two bar charts side by side
     x = np.arange(len(ac_types))
     width = 0.35
-    y_min = min(min(avg_scores_with), min(avg_scores_without))
-    y_max = max(max(avg_scores_with), max(avg_scores_without))
+    y_min = min(min(avg_scores_with), min(avg_scores_without)) * 0.999
+    y_max = max(max(avg_scores_with), max(avg_scores_without)) * 1.001
 
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
 
@@ -100,7 +100,7 @@ def plot_similarity_scores(results_with_helper, results_without_helper, ac_types
     ax2.legend()
 
     plt.tight_layout()
-    plt.savefig("comparison_subplots/similarity_scores_comparison_side_by_side.png")
+    plt.savefig("eval/comparison_subplots/similarity_scores_comparison_side_by_side.png")
     plt.show()
 
     # Plot improvements as a separate table
@@ -113,7 +113,7 @@ def plot_similarity_scores(results_with_helper, results_without_helper, ac_types
     table.scale(1, 1.5)
 
     plt.tight_layout()
-    plt.savefig("comparison_subplots/improvement_table.png")
+    plt.savefig("eval/comparison_subplots/improvement_table.png")
     plt.show()
 
 def plot_normalized_similarity_scores(results_with_helper, results_without_helper, ac_types):
@@ -180,7 +180,7 @@ def plot_normalized_similarity_scores(results_with_helper, results_without_helpe
     ax2.legend()
 
     plt.tight_layout()
-    plt.savefig("comparison_subplots/normalized_similarity_scores_comparison_side_by_side.png")
+    plt.savefig("eval/comparison_subplots/normalized_similarity_scores_comparison_side_by_side.png")
     plt.show()
 
     # Plot normalized improvements as a separate table
@@ -194,46 +194,53 @@ def plot_normalized_similarity_scores(results_with_helper, results_without_helpe
 
 
     plt.tight_layout()
-    plt.savefig("comparison_subplots/normalized_improvement_table.png")
+    plt.savefig("eval/comparison_subplots/normalized_improvement_table.png")
     plt.show()
 
 def main():
-    urls = [
-        "https://openreview.net/forum?id=N3kGYG3ZcTi",
-        "https://openreview.net/forum?id=0z_cXcu1N6o",
-        "https://openreview.net/forum?id=9Zx6tTcX0SE",
-        "https://openreview.net/forum?id=3uDXZZLBAwd",
-        "https://openreview.net/forum?id=Xj9V-stmIcO",
-        "https://openreview.net/forum?id=4F1gvduDeL",
-        "https://openreview.net/forum?id=6BHlZgyPOZY",
-        "https://openreview.net/forum?id=dKkMnCWfVmm",
-        "https://openreview.net/forum?id=7YfHla7IxBJ",
-        "https://openreview.net/forum?id=KRLUvxh8uaX"
-    ]
+    # urls = [
+    #     "https://openreview.net/forum?id=N3kGYG3ZcTi",
+    #     # "https://openreview.net/forum?id=0z_cXcu1N6o",
+    #     "https://openreview.net/forum?id=9Zx6tTcX0SE",
+    #     # "https://openreview.net/forum?id=3uDXZZLBAwd",
+    #     "https://openreview.net/forum?id=Xj9V-stmIcO",
+    #     # "https://openreview.net/forum?id=4F1gvduDeL",
+    #     "https://openreview.net/forum?id=6BHlZgyPOZY",
+    #     # "https://openreview.net/forum?id=dKkMnCWfVmm",
+    #     "https://openreview.net/forum?id=7YfHla7IxBJ"
+    #     # "https://openreview.net/forum?id=KRLUvxh8uaX"
+    # ]
 
     area_chair_types = ['INCLUSIVE', 'CONFORMIST', 'AUTHORITARIAN', 'BASELINE']
 
-    results_true_all = []
-    results_false_all = []
-    for url in urls:
-        results_true = generate_metareview_all_ac_type(url, metareviewhelper=True)
-        results_false = generate_metareview_all_ac_type(url, metareviewhelper=False)
+    # results_true_all = []
+    # results_false_all = []
+    # for url in urls:
+    #     results_true = generate_metareview_all_ac_type(url, metareviewhelper=True)
+    #     results_false = generate_metareview_all_ac_type(url, metareviewhelper=False)
 
-        results_true_all.extend(results_true)
-        results_false_all.extend(results_false)
+    #     results_true_all.extend(results_true)
+    #     results_false_all.extend(results_false)
 
-    # Calculate true similarity scores
-    model_name = "text-embedding-ada-002"
-    true_similarity_results_with_helper = generate_similarity_json(results_true_all, model_name)
-    true_similarity_results_without_helper = generate_similarity_json(results_false_all, model_name)
+    # # Calculate true similarity scores
+    # model_name = "text-embedding-ada-002"
+    # true_similarity_results_with_helper = generate_similarity_json(results_true_all, model_name)
+    # true_similarity_results_without_helper = generate_similarity_json(results_false_all, model_name)
 
-    # Save to JSON
-    with open('eval_results/true_metareview_similarity_results_with_helper.json', 'w') as json_file:
-        json.dump(true_similarity_results_with_helper, json_file, indent=4)
+    # # Save to JSON
+    # with open('eval/eval_results/true_metareview_similarity_results_with_helper.json', 'w') as json_file:
+    #     json.dump(true_similarity_results_with_helper, json_file, indent=4)
 
-    with open('eval_results/true_metareview_similarity_results_without_helper.json', 'w') as json_file:
-        json.dump(true_similarity_results_without_helper, json_file, indent=4)
+    # with open('eval/eval_results/true_metareview_similarity_results_without_helper.json', 'w') as json_file:
+    #     json.dump(true_similarity_results_without_helper, json_file, indent=4)
 
+    # 첫 번째 JSON 파일 불러오기
+    with open('eval/experiment/5/true_metareview_similarity_results_with_helper.json', 'r', encoding='utf-8') as json_file:
+        true_similarity_results_with_helper = json.load(json_file)
+
+    # 두 번째 JSON 파일 불러오기
+    with open('eval/experiment/5/true_metareview_similarity_results_without_helper.json', 'r', encoding='utf-8') as json_file:
+        true_similarity_results_without_helper = json.load(json_file)
     # Plot similarity scores
     plot_similarity_scores(true_similarity_results_with_helper, true_similarity_results_without_helper, area_chair_types)
 
