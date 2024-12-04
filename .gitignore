@@ -1,6 +1,7 @@
 *.pdf
 *.ipynb
 *.env copy
+*.env
 *.venv
 /venv
 /__pycache__
