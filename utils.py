@@ -1,4 +1,5 @@
 import io
+import regex as re
 import streamlit as st
 
 from PyPDF2 import PdfReader
@@ -20,7 +21,20 @@ import fitz
 
 
 instructions = {
-  "review_summary": "Summarize each reviews in a form like '**Review 1**: ..., **Review 2**: ...'. Each summary should be about 3 sentences. Then, based on the reviews, recommend which pages of the paper should I read to effectively understand the opinions of the reviewers. Recommendation should be like '**Important Pages**: ...'",
+  "review_summary": '''
+Identify all the reviews from reviewers and summarize them using the following format for each review:
+
+<review>Review number</reveiw>
+<review summary> Summary of the review in about 5 sentences </review summary>
+<reviewer>Reviewer ID</reviewer>
+<strength> Strengths of the paper highlighted by the reviewer </strength>
+<weakness> Weakness of the paper highlighted by the reviewer </weakness>
+<keywords> Key words of the review </keywords>
+For each review, recommend which pages of the paper should I read to effectively address it. Use the format: <important pages>Important Pages numbers and contents</important pages>
+
+Include the special tokens in your response as well.
+'''
+,
   "inconsistency_summary": "Find any inconsistency between reviewers and summarize it in a form like '**Inconsistency 1**: ..., **Inconsistency 2**: ...'. Each summary should be about 5 sentences. Then recommend which page of the paper should I read to effectively resolve the inconsistency. Recommendation should be like '**Important Pages**: ...'. If there is no inconsistency at all, just answer no.",
   "discussion_summary": "Summarize each discussion a form like '**Discussion 1**: ..., **Discussion 2**: ...'. Each summary should be about 5 sentences. Here 'discussion' means a review and the replies for that review. Each summary should list brief summary of the review, main points of the discussion, and whether the reply of authors was appropriate.",
   "find_inconsistency_in_pdf": "You are a research assistant tasked with identifying the exact text from a research paper corresponding to a specific description of its content. You will be provided with two inputs: Paper Text: The full text of the paper (paper_text). \
@@ -28,6 +42,20 @@ instructions = {
       Your goal is to: Find the exact text from the paper_text that matches or is most relevant to the inconsistency_text. Return only the relevant text as it appears in the paper_text without any additional explanations or modifications. Please exclude any mathematical expressions, and make sure to extract the exact text from the paper text without any modifications. \
         Returns form like '{**'Inconsistency 1'**: ..., **'Inconsistency 2'**: ...} "
 } 
+
+tokens = {
+  "review_summary": ['review', 'review summary', 'reviewer', 'strength', 'weakness', 'keywords', 'important pages'],
+}
+
+def parse_text(text, tokens):
+  parsed_data = {}
+  for token in tokens:
+    # Regular expression to extract content between the token tags
+    pattern = f"<{token}>(.*?)<\\/{token}>"
+    matches = re.findall(pattern, text, re.DOTALL)  # DOTALL to include newlines
+    parsed_data[token] = matches
+
+  return parsed_data
 
 class NoteNode:
   def __init__(self, note):
