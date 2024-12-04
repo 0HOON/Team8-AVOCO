@@ -1,13 +1,12 @@
 import re
 import functions
-from langchain_core.runnables import RunnablePassthrough
-from langchain_core.prompts import PromptTemplate
+from dotenv import load_dotenv
 from langchain_core.output_parsers import StrOutputParser
 from langchain_openai import ChatOpenAI
-from langgraph.graph import MessagesState, StateGraph
-from langgraph.checkpoint.memory import MemorySaver
+from similarity_evaluation import clean_text
 
-functions.load_dotenv()
+
+load_dotenv()
 
 DEFAULT_TEMPERATURE = 1.0
 DEFAULT_MAX_TOKENS = 4096
@@ -64,23 +63,37 @@ def add_area_chair_description(area_chair_type: str) -> str:
         return f"## Your Biography ## \n{desc_conformist_ac}"
     elif area_chair_type == "authoritarian":
         return f"## Your Biography ## \n{desc_authoritarian_ac}"
+    elif area_chair_type == "ALL":
+        return f"""## Biography description ## \n 
+        INCLUSIVE : {desc_inclusive_ac} \n
+        CONFORMIST : {desc_conformist_ac} \n
+        AUTHORITARIAN : {desc_authoritarian_ac} \n
+        BASELINE : \n
+        \n
+        Please actively refer to the above Biography descriptions when scoring the paper and writing your meta-reviews. It is perfectly acceptable for the scores and evaluations to vary based on these descriptions, as they are intended to guide a more nuanced and informed assessment.\n
+        """
     return "## Your Biography ## \n\n"
 
 def add_information_needed(metareviewhelper: bool, texts: tuple, url: str) -> str:
     """
     Adds information needed for writing the meta-review to the prompt.
     :param metareviewhelper: Boolean flag to include meta-review assistance.
-    :param texts: Tuple containing paper content and reviews.
-    :param url: URL to fetch paper content and reviews.
+    :param texts: Tuple containing reviews, paper content, and PDF content.
+    :param url: URL to fetch additional content if needed.
     :return: Information string.
     """
-    reviews, paper_content = texts
+    reviews, paper_content, pdf = texts
 
-    prompt = "Here are three pieces of information needed to write a meta-review: \n"
-    prompt += "1. Paper contents \n 2. Reviews \n"
+    prompt = "Here are three pieces of information needed to write a meta-review:\n"
+    prompt += "1. Paper contents\n2. Reviews\n"
 
     if metareviewhelper:
-        prompt += "3. Information provided by the meta-review assistant service: \n \t 3.1 Review summary \n \t 3.2 Reviewers' inconsistency summary \n \t 3.3 Discussion summary\n"
+        prompt += ("3. Information provided by the meta-review assistant service:\n"
+                   "\t3.1 Review summary\n"
+                   "\t3.2 Reviewers' inconsistency summary\n"
+                   "\t3.3 Discussion summary\n")
+    else:
+        prompt += "3. (No additional information provided by the meta-review assistant service)\n"
 
     prompt += "## Paper contents ##\n"
     prompt += paper_content + "\n"
@@ -89,11 +102,18 @@ def add_information_needed(metareviewhelper: bool, texts: tuple, url: str) -> st
     prompt += reviews + "\n"
 
     if metareviewhelper:
-        chain = functions.prepare_chain(url)[0]
+        chain = functions.prepare_chain(url)
         prompt += "## Information provided by the meta-review assistant service ##\n"
-        prompt += chain.invoke(functions.instructions["review_summary"] + "\n\n reviews: " + reviews) + "\n"
-        prompt += chain.invoke(functions.instructions["inconsistency_summary"] + "\n\n reviews: " + reviews) + "\n"
-        prompt += chain.invoke(functions.instructions["discussion_summary"] + "\n\n reviews: " + reviews) + "\n"
+        review_summary = chain.invoke(functions.instructions["review_summary"] + "\n\nreviews: " + reviews)
+        inconsistency_summary = chain.invoke(functions.instructions["inconsistency_summary"] + "\n\nreviews: " + reviews)
+        discussion_summary = chain.invoke(functions.instructions["discussion_summary"] + "\n\nreviews: " + reviews)
+
+        prompt += review_summary + "\n"
+        prompt += inconsistency_summary + "\n"
+        prompt += discussion_summary + "\n"
+
+        # Add instruction to actively refer to this content
+        prompt += ("\nPlease actively refer to the information provided above by the meta-review assistant service, regardless of the biography description, when scoring the paper and writing your meta-review.\n")
 
     return prompt
 
@@ -191,11 +211,95 @@ def extract_score(response: str) -> float:
         return float(score_match.group(1))
     return 0.0
 
-# Example usage
+def add_combined_output_format(area_chair_types: list) -> str:
+    """
+    Adds a combined output format specification to the prompt for all area chair types.
+    :param area_chair_types: List of area chair types.
+    :return: Combined output format string.
+    """
+    output_format = "## Output format for all area chair types ##\n"
+    output_format += "Write a metareview tailored to each area chair type, taking their biography descriptions into account. Please use the following format:\n\n"
+    for ac_type in area_chair_types:
+        output_format += f"### {ac_type.upper()} ###\n"
+        output_format += "``\n"
+        output_format += (
+            "Score: ... # Provide a score for the paper in the range from 1 to 10. Do not write any reasons. Intermediary integer scores such as 9, 7, 4, and 2 are allowed. Fractions such as "
+            "6.5 are allowed.\n\n")
+        output_format += ("Summary: ... <EOS> \n # Provide a summary of the paper based on the paper contents (if provided), reviewers' reviews and discussions (if provided), authors' rebuttal, and your own expertise. ")
+        output_format += ("Strengths: ... <EOS> \n # Provide the paper's strengths")
+        output_format += ("Weaknesses: ... <EOS> \n # Provide the paper's weaknesses")
+        output_format += "``\n\n"
+
+    return output_format
+
+def extract_multiple_scores_and_reviews(response: str, area_chair_types: list) -> list:
+    import re
+    result = []
+    for ac_type in area_chair_types:
+        # Build a regex pattern to match the section for this type
+        pattern = r'###\s*' + re.escape(ac_type) + r'\s*###(.*?)(?=###|$)'
+        match = re.search(pattern, response, re.DOTALL)
+        if match:
+            section = match.group(1).strip()
+            # Extract the score
+            score_match = re.search(r'Score:\s*(\d+)', section)
+            if score_match:
+                score = float(score_match.group(1))
+            else:
+                score = None
+            # Add to result
+            result.append((ac_type, score, section))
+    return result
+
+def generate_metareview_all_ac_type(url: str, metareviewhelper: bool) -> list:
+    """
+    Generates meta-reviews for all types of area chairs.
+    :param url: URL to fetch paper content and reviews.
+    :param metareviewhelper: Boolean flag to include meta-review assistance.
+    :return: List of tuples containing scores, meta-reviews, and whether the helper was used for all area chair types.
+    """
+    area_chair_types = ['INCLUSIVE', 'CONFORMIST', 'AUTHORITARIAN', 'BASELINE']
+    texts = functions.get_texts_from_url(url)
+    prompt = create_global_prompt()
+    prompt += add_information_needed(metareviewhelper, texts, url)
+    prompt += add_metareview_guideline()
+    prompt += add_rubrics()
+    prompt += add_area_chair_description("ALL")
+    prompt += add_combined_output_format(area_chair_types)
+    response = generate_metareview_from_chain(prompt)
+    results = extract_multiple_scores_and_reviews(response, area_chair_types)
+
+    # Clean the metareview text
+    results = [(url, ac_type, score, clean_text(metareview), metareviewhelper) for (ac_type, score, metareview) in results]
+
+    return results
+
+
+# Example usage of the plotting function
+def main():
+    urls = [
+        "https://openreview.net/forum?id=N3kGYG3ZcTi",
+        "https://openreview.net/forum?id=0z_cXcu1N6o",
+        "https://openreview.net/forum?id=9Zx6tTcX0SE",
+        "https://openreview.net/forum?id=3uDXZZLBAwd",
+        "https://openreview.net/forum?id=Xj9V-stmIcO",
+        "https://openreview.net/forum?id=4F1gvduDeL",
+        "https://openreview.net/forum?id=6BHlZgyPOZY",
+        "https://openreview.net/forum?id=dKkMnCWfVmm",
+        "https://openreview.net/forum?id=7YfHla7IxBJ",
+        "https://openreview.net/forum?id=KRLUvxh8uaX"
+    ]
+
+    area_chair_types = ['INCLUSIVE', 'CONFORMIST', 'AUTHORITARIAN', 'BASELINE']
+
+    results_true_all = []
+    results_false_all = []
+    for url in urls:
+        results_true = generate_metareview_all_ac_type(url, metareviewhelper=True)
+        results_false = generate_metareview_all_ac_type(url, metareviewhelper=False)
+        
+        results_true_all.extend(results_true)
+        results_false_all.extend(results_false)
+
 if __name__ == "__main__":
-    url = "https://openreview.net/forum?id=3ULaIHxn9u7"
-    area_chair_type = "inclusive"
-    metareviewhelper = True
-    score, metareview = generate_metareview(url, area_chair_type, metareviewhelper)
-    print("Score:", score)
-    print("Metareview:", metareview)
+    main()

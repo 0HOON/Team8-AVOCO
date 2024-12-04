@@ -3,6 +3,7 @@
 *.env copy
 *.env
 *.venv
+.env
 /venv
 /__pycache__
 pyproject.toml

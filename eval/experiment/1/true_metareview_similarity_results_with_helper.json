@@ -1,0 +1,38 @@
+[
+    {
+        "URL": "https://openreview.net/forum?id=N3kGYG3ZcTi",
+        "model_name": "text-embedding-ada-002",
+        "AC_type": "INCLUSIVE",
+        "MV_helper": "with",
+        "score": 5.0,
+        "similarity_score": 0.7734992504119873,
+        "paper_decision": "Reject"
+    },
+    {
+        "URL": "https://openreview.net/forum?id=N3kGYG3ZcTi",
+        "model_name": "text-embedding-ada-002",
+        "AC_type": "CONFORMIST",
+        "MV_helper": "with",
+        "score": 4.0,
+        "similarity_score": 0.7737467885017395,
+        "paper_decision": "Reject"
+    },
+    {
+        "URL": "https://openreview.net/forum?id=N3kGYG3ZcTi",
+        "model_name": "text-embedding-ada-002",
+        "AC_type": "AUTHORITARIAN",
+        "MV_helper": "with",
+        "score": 3.0,
+        "similarity_score": 0.783571720123291,
+        "paper_decision": "Reject"
+    },
+    {
+        "URL": "https://openreview.net/forum?id=N3kGYG3ZcTi",
+        "model_name": "text-embedding-ada-002",
+        "AC_type": "BASELINE",
+        "MV_helper": "with",
+        "score": 4.0,
+        "similarity_score": 0.785732090473175,
+        "paper_decision": "Reject"
+    }
+]

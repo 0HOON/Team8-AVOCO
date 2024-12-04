@@ -1,63 +1,89 @@
 import io
-from dotenv import load_dotenv
 from PyPDF2 import PdfReader
-
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
-from langchain_core.messages import HumanMessage, SystemMessage
-
 from langchain.text_splitter import CharacterTextSplitter
-
 from langchain_community.vectorstores import FAISS
-
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_huggingface import HuggingFaceEmbeddings
-
-from langgraph.checkpoint.memory import MemorySaver
-from langgraph.graph import START, MessagesState, StateGraph
-
 import openreview
-from dotenv import load_dotenv
-load_dotenv()
 
-## TODO 1, 2가 full text 사용하기
-## TODO review 전부 가져오기
-## TODO 결과 복사 버튼 만들기
+
 
 instructions = {
   "review_summary": "Summarize each reviews in a form like '**Review 1**: ..., **Review 2**: ...'. Each summary should be about 3 sentences. Then, based on the reviews, recommend which pages of the paper should I read to effectively understand the opinions of the reviewers. Recommendation should be like '**Important Pages**: ...'",
   "inconsistency_summary": "Find any inconsistency between reviewers and summarize it in a form like '**Inconsistency 1**: ..., **Inconsistency 2**: ...'. Each summary should be about 5 sentences. Then recommend which page of the paper should I read to effectively resolve the inconsistency. Recommendation should be like '**Important Pages**: ...'. If there is no inconsistency at all, just answer no.",
-  "discussion_summary": "Summarize each discussion a form like '**Discussion 1**: ..., **Discussion 2**: ...'. Each summary should be about 5 sentences. Here 'discussion' means a review and the replies for that review. Each summary should list brief summary of the review, main points of the discussion, and whether the reply of authors was appropriate."
-} 
+  "discussion_summary": "Summarize each discussion a form like '**Discussion 1**: ..., **Discussion 2**: ...'. Each summary should be about 5 sentences. Here 'discussion' means a review and the replies for that review. Each summary should list brief summary of the review, main points of the discussion, and whether the reply of authors was appropriate.",
+}
+
+class NoteNode:
+  def __init__(self, note):
+    '''
+      TreeNode for openreview Notes
+    '''
+    self.id = note.id
+    self.title = note.content.get('title')
+    self.writer = note.writers[-1].split('/')[-1]
+    self.content = note.content
+    self.replyto = note.replyto
+    self.replies = []
+  
+  def add_reply(self, node):
+    if self.id == node.replyto:
+      self.replies.append(node)
+      node.replyto = self
+      return True
+
+    if len(self.replies) > 0:
+      for rep in self.replies:
+        if rep.add_reply(node):
+          return True
+      return False
+    else:
+      return False
+
+  def get_text(self, level):
+    text = ''
+    if self.title: # reply
+      if self.replyto is not None: # else root
+        text += f"\n{'#'*level} {self.writer}'s reply to {self.replyto.writer}\n"
+        text += f"title: {self.title}\n"
+        text += f"comment: {self.content['comment']}\n"    
+    else: # review
+      text += f"\n\n\n# Review from {self.writer}\n"
+      text += "\n\n## Summary of the paper\n"
+      text += self.content['summary_of_the_paper']
+      text += "\n\n## Strength and Weaknesses\n"
+      text += self.content['strength_and_weaknesses']
+      text += "\n\n## Clarity, Quality, Novelty And Reproducibility\n"
+      text += self.content['clarity,_quality,_novelty_and_reproducibility']
+      text += "\n\n## Summary of the review\n"
+      text += self.content['summary_of_the_review']
+      text += "\n\n"
+
+    for rep in self.replies:
+      text += rep.get_text(level+1)
+      
+    return text
+  
 
 def get_reviews_and_pdf_from_url(url, venue_id="ICLR.cc/2023/Conference"):
   client = openreview.Client()
   paper_id = url.split('=')[-1]
   paper_info = client.get_note(paper_id)
-  reviews = client.get_notes(replyto=paper_id, details='replies')
+  reviews = sorted(client.get_all_notes(forum=paper_id), key=lambda x: x.cdate)
   pdf = client.get_pdf(paper_id)
   return reviews, pdf
     
 def get_reviews_text(reviews):
-  text = ""
-  reviews = [review for review in reviews if 'title' not in review.content]
-  for i, review in enumerate(reviews):
-    text += f"\n\n\n#### Review {i+1} ####\n"
-    text += "\n\n# Summary of the paper\n"
-    text += review.content['summary_of_the_paper']
-    text += "\n\n# Strength and Weaknesses\n"
-    text += review.content['strength_and_weaknesses']
-    text += "\n\n# Clarity, Quality, Novelty And Reproducibility\n"
-    text += review.content['clarity,_quality,_novelty_and_reproducibility']
-    text += "\n\n# Summary of the review\n"
-    text += review.content['summary_of_the_review']
-    text += "\n\n"
-    for j, reply in enumerate(review.details['replies']):
-      text += f"\n## Reply {j+1}\n"
-      text += reply['content']['comment']
-      
-  return text
+  root = NoteNode(reviews[0])
+  for note in reviews[1:]:
+    if note.content.get('title') and 'Decision'in note.content['title']:
+      break
+    node = NoteNode(note)
+    root.add_reply(node)
+  return root.get_text(0)
 
 def get_pdf_text(pdf):
   text = ""
@@ -72,7 +98,7 @@ def get_texts_from_url(url):
   reviews_text = get_reviews_text(reviews)
   pdf_text = get_pdf_text(pdf)
 
-  return reviews_text, pdf_text
+  return reviews_text, pdf_text, pdf
 
 def get_text_chunks(raw_text):
   splitter = CharacterTextSplitter(
@@ -94,10 +120,9 @@ def format_docs(docs):
   return "\n\n".join(doc.page_content for doc in docs)
 
 def prepare_chain(url):
-  review_text, pdf_text= get_texts_from_url(url)
+  review_text, pdf_text,pdf = get_texts_from_url(url)
   text_chunks = get_text_chunks(pdf_text)
   vectorstore = get_vectorstore(text_chunks)
-
   llm = ChatOpenAI(model_name="gpt-4o-mini", temperature=0)
   parser = StrOutputParser()
 
@@ -117,28 +142,4 @@ def prepare_chain(url):
     | parser
   )
 
-  return prompt_chain, review_text
-
-def main(url):
-  load_dotenv()
-
-  chain, review_text = prepare_chain(url)
-
-  # Generating summaries using the prompt chain
-  review_summary = chain.invoke(instructions["review_summary"] + "\n\n reviews: " + review_text)
-  inconsistency_summary = chain.invoke(instructions["inconsistency_summary"] + "\n\n reviews: " + review_text)
-  discussion_summary = chain.invoke(instructions["discussion_summary"] + "\n\n reviews: " + review_text)
-
-  # Printing summaries
-  print("\n\nReview Summary:\n")
-  print(review_summary)
-
-  print("\n\nInconsistency Summary:\n")
-  print(inconsistency_summary)
-
-  print("\n\nDiscussion Summary:\n")
-  print(discussion_summary)
-
-if __name__ == '__main__':
-  paper_url = input("Enter the OpenReview URL of the paper: ")
-  main(paper_url)
+  return prompt_chain
