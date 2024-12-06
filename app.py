@@ -1,37 +1,50 @@
 import streamlit as st
 from dotenv import load_dotenv
 
-from htmlTemplates import css
 from dotenv import load_dotenv
 
-from utils import prepare_chain, instructions
+from utils import prepare_chain, get_paper_list, instructions
 load_dotenv()
 
 ## TODO review 전부 가져오기
 ## TODO 결과 복사 버튼 만들기
 
-def get_url():
+def select_paper():
   st.header("Meta Review Helper :books:")
-  url = st.text_input("Enter OpenReview URL of the paper:")
-  if st.button("Summarize!"):
-    st.session_state.chain = prepare_chain(url)
+  option = st.selectbox(
+    "Which paper needs to be summarized?",
+    options=st.session_state.paper_list,
+    index=None,
+    format_func=lambda x: x.content["title"],
+    placeholder="Select paper...",
+  )
+  if option:
+    st.session_state.chain = prepare_chain(option)
+    option = None
     st.rerun()
 
 def reset():
+  tmp = st.session_state.paper_list
   st.session_state.clear()
+  st.session_state.paper_list = tmp
   st.rerun()
 
 def main():
   # load env settings
   load_dotenv()
-
   # session_state list
   # - url: OpenReview URL input
   # - title: title of the paper
   # - chain: langchain object
   # - review/inconsistency/discussion_summary: generated summary text
-
+  # - paper_list: all paper list
   st.set_page_config(page_title="Meta Review Helper", page_icon=":books:", layout="wide")
+  with open("./.streamlit/style.css") as f:
+    st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+
+  if "paper_list" not in st.session_state:
+    with st.spinner("Initializing..."):
+      st.session_state.paper_list = get_paper_list()
   
   #st.write(css, unsafe_allow_html=True)
 
@@ -49,7 +62,7 @@ def main():
     pg = st.navigation({"Account": [reset_page]} | page_dict)
     st.title(st.session_state.title)
   else:
-    pg = st.navigation([st.Page(get_url)])    
+    pg = st.navigation([st.Page(select_paper)])
 
   pg.run()
 

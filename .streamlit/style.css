@@ -1,0 +1,4 @@
+div[data-testid="stExpander"] div[data-testid="stMarkdownContainer"] p {
+  font-weight: 600;
+  font-size: 22px;
+}

@@ -1,5 +1,7 @@
 import io
 import regex as re
+import pickle
+import os
 import streamlit as st
 
 from PyPDF2 import PdfReader
@@ -22,21 +24,34 @@ import fitz
 
 instructions = {
   "review_summary": '''
-Identify all the reviews from reviewers and summarize them using the following format for each review:
+  Identify all the reviews from reviewers and summarize them using the following format for each review:
 
-<review>Review number</reveiw>
-<review summary> Summary of the review in about 5 sentences </review summary>
-<reviewer>Reviewer ID</reviewer>
-<strength> Strengths of the paper highlighted by the reviewer </strength>
-<weakness> Weakness of the paper highlighted by the reviewer </weakness>
-<keywords> Key words of the review </keywords>
-For each review, recommend which pages of the paper should I read to effectively address it. Use the format: <important pages>Important Pages numbers and contents</important pages>
+  <review>Review number</reveiw>
+  <review summary> Summary of the review in about 5 sentences </review summary>
+  <reviewer>Reviewer ID</reviewer>
+  <strength> Strengths of the paper highlighted by the reviewer </strength>
+  <weakness> Weakness of the paper highlighted by the reviewer </weakness>
+  <keywords> Key words of the review </keywords>
+  For each review, recommend which pages of the paper should I read to effectively address it. Use the format: <important pages>Important Pages numbers and contents</important pages>
 
-Include the special tokens in your response as well.
-'''
+  Include the special tokens in your response as well.
+  '''
 ,
   "inconsistency_summary": "Find any inconsistency between reviewers and summarize it in a form like '**Inconsistency 1**: ..., **Inconsistency 2**: ...'. Each summary should be about 5 sentences. Then recommend which page of the paper should I read to effectively resolve the inconsistency. Recommendation should be like '**Important Pages**: ...'. If there is no inconsistency at all, just answer no.",
-  "discussion_summary": "Summarize each discussion a form like '**Discussion 1**: ..., **Discussion 2**: ...'. Each summary should be about 5 sentences. Here 'discussion' means a review and the replies for that review. Each summary should list brief summary of the review, main points of the discussion, and whether the reply of authors was appropriate.",
+  "discussion_summary": '''
+  From given review and replies, identify the key aspects of the discussion using the following format:
+
+  <discussion>Discussion with "Reviewer ID"</discussion>
+  <key issues> Main concerns or questions raised by the reviewer </key issues>
+  <response> Summary about how did the author address the key issues, including any evidence or reasoning they provided </response>
+  <evaluation> Evaluate whether the response was adequate or if there were gaps or areas for improvement </evaluation>
+  <reviewer reaction> Summary about how did the reviewer assess the author's response and if the reviewer changes their opinion or score as a result <reviewer reaction>
+
+  For each review, recommend which pages of the paper should I read to effectively address it. Use the format: <important pages>Important Pages numbers and contents</important pages>
+
+  Include the special tokens in your response as well. And underline important key words of your response.
+  ''',
+
   "find_inconsistency_in_pdf": "You are a research assistant tasked with identifying the exact text from a research paper corresponding to a specific description of its content. You will be provided with two inputs: Paper Text: The full text of the paper (paper_text). \
     Inconsistency Text: A description of a section or part of the paper where inconsistencies in reviews are observed (inconsistency_text). \
       Your goal is to: Find the exact text from the paper_text that matches or is most relevant to the inconsistency_text. Return only the relevant text as it appears in the paper_text without any additional explanations or modifications. Please exclude any mathematical expressions, and make sure to extract the exact text from the paper text without any modifications. \
@@ -44,7 +59,8 @@ Include the special tokens in your response as well.
 } 
 
 tokens = {
-  "review_summary": ['review', 'review summary', 'reviewer', 'strength', 'weakness', 'keywords', 'important pages'],
+  "review_summary": ["review", "review summary", "reviewer", "strength", "weakness", "important pages"],
+  "discussion_summary": ["discussion", "key issues", "response", "evaluation", "reviewer reaction", "important pages"]
 }
 
 def parse_text(text, tokens):
@@ -83,7 +99,7 @@ class NoteNode:
     else:
       return False
 
-  def get_text(self, level):
+  def get_text(self, level, recursive=True):
     text = ''
     if self.title: # reply
       if self.replyto is not None: # else root
@@ -102,22 +118,21 @@ class NoteNode:
       text += self.content['summary_of_the_review']
       text += "\n\n"
 
-    for rep in self.replies:
-      text += rep.get_text(level+1)
+    if recursive:
+      for rep in self.replies:
+        text += rep.get_text(level+1)
       
     return text
   
 
-def get_reviews_and_pdf_from_url(url, venue_id="ICLR.cc/2023/Conference"):
+def get_reviews_and_pdf(note:openreview.Note, venue_id="ICLR.cc/2023/Conference"):
   client = openreview.Client()
-  paper_id = url.split('=')[-1]
-  paper_info = client.get_note(paper_id)
-  #st.write(f"Title: {paper_info.content['title']}")
+  paper_id = note.id
 
-  st.session_state.title = paper_info.content['title']
-  st.session_state.authors = paper_info.content['authors']
-  st.session_state.keywords = paper_info.content['keywords']
-  st.session_state.abstract = paper_info.content['abstract']
+  st.session_state.title = note.content['title']
+  st.session_state.authors = note.content['authors']
+  st.session_state.keywords = note.content['keywords']
+  st.session_state.abstract = note.content['abstract']
 
   reviews = sorted(client.get_all_notes(forum=paper_id), key=lambda x: x.cdate)
   pdf = client.get_pdf(paper_id)
@@ -130,6 +145,7 @@ def get_reviews_text(reviews):
       break
     node = NoteNode(note)
     root.add_reply(node)
+  st.session_state.root = root
   return root.get_text(0)
 
 def get_pdf_text(pdf):
@@ -139,8 +155,8 @@ def get_pdf_text(pdf):
       text += page.extract_text()
   return text
 
-def get_texts_from_url(url):
-  reviews, pdf = get_reviews_and_pdf_from_url(url)
+def get_texts(note:openreview.Note):
+  reviews, pdf = get_reviews_and_pdf(note)
 
   reviews_text = get_reviews_text(reviews)
   pdf_text = get_pdf_text(pdf)
@@ -166,12 +182,12 @@ def get_vectorstore(text_chunks):
 def format_docs(docs):
   return "\n\n".join(doc.page_content for doc in docs)
 
-def prepare_chain(url):
+def prepare_chain(note:openreview.Note):
   with st.spinner("Collecting Paper Data"):
-    review_text, pdf_text,pdf = get_texts_from_url(url)
+    review_text, pdf_text, pdf = get_texts(note)
     st.session_state.full_text = review_text
     st.session_state.paper_text = pdf_text
-    st.session_state.paper_pdf=pdf
+    st.session_state.paper_pdf= pdf
     text_chunks = get_text_chunks(pdf_text)
   with st.spinner("Building Vector Store"):
     vectorstore = get_vectorstore(text_chunks)
@@ -217,4 +233,15 @@ def represent_pdf(search_strings):
   pdf_document.close()
   return output_filename
   
-    
+def get_paper_list():
+  file_path = "./paper_list.pkl"
+  if os.path.isfile(file_path):
+    with open(file_path, 'rb') as f:
+      papers = pickle.load(f)
+  else:
+    client = openreview.Client()
+    papers = client.get_all_notes(signature='ICLR.cc/2023/Conference')
+    with open(file_path, 'wb') as f:
+      pickle.dump(papers, f)
+  return papers
+  

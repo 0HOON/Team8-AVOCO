@@ -1,23 +1,38 @@
 import streamlit as st
 from utils import instructions, tokens, parse_text
 
-st.header(":material/emoji_people: Review Summary")
 
+  
+st.header(":material/emoji_people: Review Summary")
+def display_text():
+   for i in range(len(st.session_state.review_summary['review'])):
+    with st.expander(f"{st.session_state.review_summary['reviewer'][i]}", ):
+      cols = st.columns((1, 1), gap='medium')
+      for token in tokens["review_summary"]:
+        if token in ["review", "reviewer"]:
+          continue
+        
+        col_i = token != "review summary"
+        with cols[col_i]:
+          with st.container(border=True):
+            st.markdown(f"#### {token.capitalize()}")
+            for sentence in st.session_state.review_summary[token][i].strip().split(". "):
+              st.markdown(f"* {sentence}")
+          col_i = (col_i+1)%2
+  
 if 'review_summary' in st.session_state:
-  for i in range(len(st.session_state.review_summary['review'])):
-    with st.expander(f"**{st.session_state.review_summary['reviewer'][i]}**", ):
-      st.markdown(f"### Summary")
-      st.markdown(f"{st.session_state.review_summary['review summary'][i]}")
-      st.markdown(f"### Strengths")
-      st.markdown(f"{st.session_state.review_summary['strength'][i]}")
-      st.markdown(f"### Weaknesses")
-      st.markdown(f"{st.session_state.review_summary['weakness'][i]}")
-      st.markdown(f"### Keywords")
-      st.markdown(f"{st.session_state.review_summary['keywords'][i]}")
-      st.markdown(f"### Important Pages")
-      st.markdown(f"{st.session_state.review_summary['important pages'][i]}")
+  display_text()
+
 else:
   with st.spinner("Processing"):
-    st.session_state.text = st.session_state.chain.invoke(instructions["review_summary"] + "\n\n full text of reviews: " + st.session_state.full_text)
-    st.session_state.review_summary = parse_text(st.session_state.text, tokens["review_summary"])
+    text = ""
+    for review in st.session_state.root.replies:
+      if review.writer != "Authors":
+        text += st.session_state.chain.invoke(
+          instructions["review_summary"] 
+          + "\n\n Full text of review: " 
+          + review.get_text(0, recursive=False)
+        )
+
+    st.session_state.review_summary = parse_text(text, tokens["review_summary"])
     st.rerun()
