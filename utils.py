@@ -251,7 +251,7 @@ def represent_pdf(search_strings, reviewers):
                           text_position,
                           f"{id}",
                           fontsize=10,  # Font size
-                          color=(0, 0, 1),  # Text color (black)
+                          color=(0, 0, 1),  # Text color (blue)
                           fontname="helv",  # Font name
                       )
                       offset+=10
