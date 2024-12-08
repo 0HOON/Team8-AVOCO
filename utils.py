@@ -37,7 +37,18 @@ instructions = {
   Include the special tokens in your response as well.
   '''
 ,
-  "inconsistency_summary": "Find any inconsistency between reviewers and summarize it in a form like '**Inconsistency 1**: ..., **Inconsistency 2**: ...'. Each summary should be about 5 sentences. Then recommend which page of the paper should I read to effectively resolve the inconsistency. Recommendation should be like '**Important Pages**: ...'. If there is no inconsistency at all, just answer no.",
+"inconsistency_summary": '''Identify any inconsistencies among reviewers and summarize them using the following format exactly for each inconsistency:
+
+    <inconsistency>Inconsistency number<\inconsistency>
+    <inconsistency summary> Summary of the inconsistency in about 5 sentences <\inconsistency summary>
+    <Reviewer>Reviewer ID<\Reviewer> <Comments>Reviewer's comments related to this inconsistency<\Comments>
+
+    For each inconsistency, recommend which pages of the paper should be reviewed to effectively address it. Use the format: <important pages>Important Pages numbers and contents<\important pages>
+
+    For each inconsistency, all related reveiwers and thier comments are included with each special tags (include closing token).
+    Include the special tokens in your response as well. To handle the closing token correctly, here's the updated explanation and implementation with precise usage of backslashes. Make sure to match the pairs precisely because they will be parsed using special tokens. Always return the results exactly in the format I specify.  ''',
+              # If there is no inconsistency at all, simply respond with \
+              # No inconsistencies found. Include this exact text in your response.",
   "discussion_summary": '''
   From given review and replies, identify the key aspects of the discussion using the following format:
 
@@ -213,26 +224,44 @@ def prepare_chain(note:openreview.Note):
 
   return prompt_chain
 
-def represent_pdf(search_strings):
-  pdf_document=fitz.open("pdf",st.session_state.paper_pdf)
-  for text in search_strings:
-      for page_num in range(len(pdf_document)):
-          page = pdf_document[page_num]
-          # 텍스트 검색 (출력 형식: [(x0, y0, x1, y1, "찾은 텍스트", idx), ...])
-          text_instances = page.search_for(text)
-          
-          if text_instances:
-              # 각 검색 결과에 대해 사각형 하이라이트 추가
-              for rect in text_instances:
-                  highlight = page.add_highlight_annot(rect)
-                  highlight.update()  # 업데이트 적용
+def represent_pdf(search_strings, reviewers):
 
-  # 하이라이트된 PDF 저장
-  output_filename = f"{st.session_state.title}_find_inconsistency.pdf"
-  pdf_document.save(output_filename)
-  pdf_document.close()
-  return output_filename
-  
+    pdf_document = fitz.open("pdf", st.session_state.paper_pdf)
+    
+    for inconsistency_text in search_strings:
+        for page_num in range(len(pdf_document)):
+            page = pdf_document[page_num]
+            # Search for the inconsistency text in the document
+            text_instances = page.search_for(inconsistency_text)
+            
+            if text_instances:
+                # Add highlights and reviewer IDs as text annotations
+                offset=0
+                for rect in text_instances:
+                    # Add highlight annotation
+                    highlight = page.add_highlight_annot(rect)
+                    highlight.update()  # Apply the highlight
+
+                    # Convert rect to (x, y) point for placing the reviewer ID text
+                    for id in reviewers:
+                      text_position = (page.rect.x0 + 10, rect.y0+(offset))  # Left margin, aligned with the top of the highlight
+
+                      # Add reviewer ID as visible text
+                      page.insert_text(
+                          text_position,
+                          f"{id}",
+                          fontsize=10,  # Font size
+                          color=(0, 0, 1),  # Text color (black)
+                          fontname="helv",  # Font name
+                      )
+                      offset+=10
+
+    # Save the modified PDF
+    output_filename = f"{st.session_state.title}_find_inconsistency_with_reviewers.pdf"
+    pdf_document.save(output_filename)
+    pdf_document.close()
+    return output_filename
+
 def get_paper_list():
   file_path = "./paper_list.pkl"
   if os.path.isfile(file_path):
