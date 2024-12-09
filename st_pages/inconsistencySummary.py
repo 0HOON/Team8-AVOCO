@@ -26,19 +26,19 @@ if 'title' in st.session_state:
 
     if st.session_state.inconsistency_summary:
         # Extract each <inconsistency> block
-        st.write("Each Extracted Inconsistency Block:")
-        st.write(st.session_state.inconsistency_summary)
+        # st.write("Each Extracted Inconsistency Block:")
+        # st.write(st.session_state.inconsistency_summary)
 
         reviewer_incons = re.findall(r"<Reviewer>(.*?)<\\Reviewer>", st.session_state.inconsistency_summary, re.DOTALL)
         comment_incons = re.findall(r"<Comments>(.*?)<\\Comments>", st.session_state.inconsistency_summary, re.DOTALL)
         summary_incons = re.findall(r"<inconsistency summary>(.*?)<\\inconsistency summary>", st.session_state.inconsistency_summary, re.DOTALL)
 
-        st.write("Reviewer Inconsistencies:")
-        st.write(reviewer_incons)
-        st.write("Comment Inconsistencies:")
-        st.write(comment_incons)
-        st.write("Summary Inconsistencies:")
-        st.write(summary_incons)
+        # st.write("Reviewer Inconsistencies:")
+        # st.write(reviewer_incons)
+        # st.write("Comment Inconsistencies:")
+        # st.write(comment_incons)
+        # st.write("Summary Inconsistencies:")
+        # st.write(summary_incons)
 
         if not summary_incons:
             st.warning("No inconsistencies found.")
