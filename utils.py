@@ -49,10 +49,11 @@ instructions = {
   For each inconsistency, recommend which pages of the paper should be reviewed to effectively address it. Use the format: <important pages>Important Pages numbers and contents<\important pages>
 
   For each inconsistency, all related reveiwers and thier comments are included with each special tags (include closing token).
-  Include the special tokens in your response as well. To handle the closing token correctly, here's the updated explanation and implementation with precise usage of backslashes. Make sure to match the pairs precisely because they will be parsed using special tokens. Always return the results exactly in the format I specify.  
+  Include the special tokens in your response as well. To handle the closing token correctly, here's the updated explanation and implementation with precise usage of backslashes. Make sure to match the pairs precisely because they will be parsed using special tokens. Always return the results exactly in the format I specify.
+  If there is no inconsistency at all, simply respond with \
+  No inconsistencies found. Include this exact text in your response.
   ''',
-                # If there is no inconsistency at all, simply respond with \
-                # No inconsistencies found. Include this exact text in your response.",
+                ,
   "discussion_summary": 
   '''
   From given review and replies, identify the key aspects of the discussion using the following format:
