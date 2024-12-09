@@ -10,9 +10,9 @@ def display_text():
       cols = st.columns((1, 1), gap='medium')
       for token in tokens["review_summary"]:
         if token in ["review", "reviewer"]:
-          continue
-        
+          continue        
         col_i = token != "review summary"
+
         with cols[col_i]:
           with st.container(border=True):
             st.markdown(f"#### {token.capitalize()}")
@@ -24,9 +24,9 @@ if 'review_summary' in st.session_state:
   display_text()
 
 else:
-  with st.spinner("Processing"):
-    text = ""
-    for review in st.session_state.root.replies:
+  text = ""
+  for i, review in enumerate(st.session_state.root.replies):
+    with st.spinner(f"Processing Review {i+1}"):
       if review.writer != "Authors":
         text += st.session_state.chain.invoke(
           instructions["review_summary"] 
@@ -34,5 +34,5 @@ else:
           + review.get_text(0, recursive=False)
         )
 
-    st.session_state.review_summary = parse_text(text, tokens["review_summary"])
-    st.rerun()
+  st.session_state.review_summary = parse_text(text, tokens["review_summary"])
+  st.rerun()

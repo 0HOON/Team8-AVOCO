@@ -23,7 +23,8 @@ import fitz
 
 
 instructions = {
-  "review_summary": '''
+  "review_summary": 
+  '''
   Identify all the reviews from reviewers and summarize them using the following format for each review:
 
   <review>Review number</reveiw>
@@ -36,9 +37,24 @@ instructions = {
 
   Include the special tokens in your response as well.
   '''
-,
-  "inconsistency_summary": "Find any inconsistency between reviewers and summarize it in a form like '**Inconsistency 1**: ..., **Inconsistency 2**: ...'. Each summary should be about 5 sentences. Then recommend which page of the paper should I read to effectively resolve the inconsistency. Recommendation should be like '**Important Pages**: ...'. If there is no inconsistency at all, just answer no.",
-  "discussion_summary": '''
+  ,
+
+  "inconsistency_summary": 
+  '''
+  Identify any inconsistencies among reviewers and summarize them using the following format for each inconsistency:
+
+  <inconsistency>Inconsistency number<\inconsistency>
+  <inconsistency summary> Summary of the inconsistency in about 5 sentences <\inconsistency summary>
+  <reviewer>Reviewer ID<\reviewer>: <comments>Reviewer's comments related to this inconsistency<\comments>
+
+  For each inconsistency, recommend which pages of the paper should be reviewed to effectively address it. Use the format: <important pages>Important Pages numbers and contents<\important pages>
+
+  Include the special tokens in your response as well. If there is no inconsistency at all, simply respond with:
+  No inconsistencies found. Include this exact text in your response.
+  ''',
+
+  "discussion_summary": 
+  '''
   From given review and replies, identify the key aspects of the discussion using the following format:
 
   <discussion>Discussion with "Reviewer ID"</discussion>

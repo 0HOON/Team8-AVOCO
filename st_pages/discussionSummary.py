@@ -30,6 +30,6 @@ else:
           + "\n\n Review and replies: " 
           + review.get_text(0, recursive=True)
         )
-    break
+    
   st.session_state.discussion_summary = parse_text(text, tokens["discussion_summary"])
   st.rerun()
