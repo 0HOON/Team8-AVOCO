@@ -86,7 +86,7 @@ if 'title' in st.session_state:
                             r'"(.*?)"', st.session_state.find_inconsistency
                         )
                         # represent_input= [(inconsistency_text, reviewer_id) for inconsistency_text, reviewer_id in zip(st.session_state.extracted_strings, reviewer_incons[i * 2: i * 2 + 2])]
-                        st.write(st.session_state.extracted_strings)
+                        # st.write(st.session_state.extracted_strings)
                         output_file = represent_pdf(st.session_state.extracted_strings, reviewer_incons[i * 2: i * 2 + 2])
                         st.session_state.output_files[f"output_file_{i}"] = output_file
                     
