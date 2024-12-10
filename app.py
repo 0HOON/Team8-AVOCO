@@ -1,10 +1,8 @@
 import streamlit as st
 from dotenv import load_dotenv
 
-from dotenv import load_dotenv
-
 from utils import prepare_chain, get_paper_list, instructions
-load_dotenv()
+load_dotenv(override=True)
 
 ## TODO review 전부 가져오기
 ## TODO 결과 복사 버튼 만들기
@@ -31,7 +29,6 @@ def reset():
 
 def main():
   # load env settings
-  load_dotenv()
   # session_state list
   # - url: OpenReview URL input
   # - title: title of the paper
@@ -59,7 +56,7 @@ def main():
     pages = [dashboard_page, review_summary_page, inconsitency_summary_page, discussion_summary_page]
     page_dict[st.session_state.title] = pages
 
-    pg = st.navigation({"Account": [reset_page]} | page_dict)
+    pg = st.navigation({"Settings": [reset_page]} | page_dict)
     st.title(st.session_state.title)
   else:
     pg = st.navigation([st.Page(select_paper)])

@@ -15,16 +15,16 @@ if 'output_files' not in st.session_state:
     st.session_state.output_files = {}
 
 if 'title' in st.session_state:
-    if st.button("Summarize!"):
-        with st.spinner("Processing"):
+    if not st.session_state.inconsistency_summary:
+        with st.spinner("Analyzing Inconsistencies..."):
             # Save the inconsistency summary in session state
             st.session_state.inconsistency_summary = st.session_state.chain.invoke(
-                instructions["inconsistency_summary"] + "\n\n summaries: " + st.session_state.full_text
+                instructions["inconsistency_summary"] + "\n\n reviews: " + st.session_state.full_text
             )
-    
+
     # st.write("Full Inconsistency Summary:")
 
-    if st.session_state.inconsistency_summary:
+    else:
         # Extract each <inconsistency> block
         # st.write("Each Extracted Inconsistency Block:")
         # st.write(st.session_state.inconsistency_summary)
@@ -71,7 +71,7 @@ if 'title' in st.session_state:
                     )
                 
                 # Display the saved text
-                st.write(st.session_state.showed_text)
+                # st.write(st.session_state.showed_text)
 
                 if inconsistency_key in st.session_state:
                     if f"output_file_{i}" not in st.session_state.output_files:
@@ -90,14 +90,23 @@ if 'title' in st.session_state:
                         output_file = represent_pdf(st.session_state.extracted_strings, reviewer_incons[i * 2: i * 2 + 2])
                         st.session_state.output_files[f"output_file_{i}"] = output_file
                     
-                    # Show download button for each output file
-                    with open(st.session_state.output_files[f"output_file_{i}"], "rb") as pdf_file:
-                        pdf_data = pdf_file.read()
-                    st.download_button(
-                        label=f"Download Highlighted PDF for Inconsistency {i + 1}",
-                        data=pdf_data,
-                        file_name=f"inconsistency_{i + 1}_highlighted.pdf",
-                        mime="application/pdf",
-                    )
+                    # Display inconsistencies
+                    with st.expander(f"Inconsistency {i + 1}"):
+                        st.markdown("#### Summary")
+                        st.markdown(f"{summary_incons[i]}")
+                        st.markdown("#### Comments")
+                        with st.container(border=True):
+                            st.markdown(f"**{reviewer_incons[i * 2]}**: {comment_incons[i * 2]}")
+                        with st.container(border=True):
+                            st.markdown(f"**{reviewer_incons[i * 2 + 1]}**: {comment_incons[i * 2 + 1]}")
+                        # Show download button for each output file
+                        with open(st.session_state.output_files[f"output_file_{i}"], "rb") as pdf_file:
+                            pdf_data = pdf_file.read()
+                        st.download_button(
+                            label=f":material/download: Download Highlighted PDF for Inconsistency {i + 1}",
+                            data=pdf_data,
+                            file_name=f"inconsistency_{i + 1}_highlighted.pdf",
+                            mime="application/pdf",
+                        )
 else:
     st.write("Please enter the OpenReview URL of the paper in the sidebar.")

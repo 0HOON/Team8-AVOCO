@@ -53,7 +53,6 @@ instructions = {
   If there is no inconsistency at all, simply respond with \
   No inconsistencies found. Include this exact text in your response.
   ''',
-                ,
   "discussion_summary": 
   '''
   From given review and replies, identify the key aspects of the discussion using the following format:
@@ -76,11 +75,26 @@ instructions = {
   Your goal is to: Find the exact text from the paper_text that matches or is most relevant to the inconsistency_text. Return only the relevant text as it appears in the paper_text without any additional explanations or modifications. Please exclude any mathematical expressions, and make sure to extract the exact text from the paper text without any modifications. \
   Returns form like '{**'Inconsistency 1'**: ..., **'Inconsistency 2'**: ...} 
   ''',
+
+  "opinion_summary": 
+  '''
+  Identify all opinions of reviewers and summarize them using the following format for each opinion:
+
+  <opinion>Title for the Opinion using keywords</opinion>
+  <opinion summary> Summary of the opinion in one sentence </opinion summary>
+  <reviewer>Reviewer1 ID</reviewer>: <comments>Reviewer's comments related to this opinion<\comments>
+  <reviewer>Reviewer2 ID</reviewer>: <comments>Reviewer's comments related to this opinion<\comments>...
+
+  For each opinion, recommend which pages of the paper should be reviewed to effectively address it. Use the format: <important pages>Important Pages numbers and contents</important pages>
+
+  Include the special tokens in your response as well. 
+  ''',
 } 
 
 tokens = {
   "review_summary": ["review", "review summary", "reviewer", "strength", "weakness", "important pages"],
-  "discussion_summary": ["discussion", "key issues", "response", "evaluation", "reviewer reaction", "important pages"]
+  "discussion_summary": ["discussion", "key issues", "response", "evaluation", "reviewer reaction", "important pages"],
+  "opinion_summary": ["opinion", "opinion summary", "reviewer", "comments", "important pages"],
 }
 
 def parse_text(text, tokens):
@@ -225,7 +239,7 @@ def prepare_chain(note:openreview.Note):
     )
 
     prompt_chain = (
-      {"instruction": RunnablePassthrough() , "context": vectorstore.as_retriever(k=10, fetch_k=30) | format_docs}
+      {"instruction": RunnablePassthrough() , "context": vectorstore.as_retriever(search_kargs={"k": 10, "fetch_k": 30}) | format_docs}
       | prompt
       | llm
       | parser

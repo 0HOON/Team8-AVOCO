@@ -23,7 +23,7 @@ if 'discussion_summary' in st.session_state:
 else:
   text = ""
   for i, review in enumerate(st.session_state.root.replies):
-    with st.spinner(f"Processing Discussion # {i+1}"):
+    with st.spinner(f"Analyzing Discussions... ({i+1}/{len(st.session_state.root.replies)})"):
       if review.writer != "Authors":
         text += st.session_state.chain.invoke(
           instructions["discussion_summary"] 
