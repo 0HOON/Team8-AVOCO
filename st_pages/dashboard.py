@@ -49,3 +49,4 @@ with col2:
 
 with col3:
   st.metric(label="test3", value=100, delta=10)
+  
