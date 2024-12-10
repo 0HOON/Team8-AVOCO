@@ -137,10 +137,11 @@ class NoteNode:
   def get_text(self, level, recursive=True):
     text = ''
     if self.title: # reply
-      if self.replyto is not None: # else root
+      if self.replyto is not None and self.content.get('comment'): # else root
         text += f"\n{'#'*level} {self.writer}'s reply to {self.replyto.writer}\n"
         text += f"title: {self.title}\n"
-        text += f"comment: {self.content['comment']}\n"    
+        text += f"comment: {self.content['comment']}\n"  
+        
     else: # review
       text += f"\n\n\n# Review from {self.writer}\n"
       text += "\n\n## Summary of the paper\n"
