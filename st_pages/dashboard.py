@@ -5,7 +5,6 @@ import altair as alt
 st.header(":material/browse_activity: Score Distribution")
 
 def extract_reviews_and_scores(replies):
-    # Fields to extract from content
     score_fields = [
         "correctness",
         "technical_novelty_and_significance",
@@ -14,7 +13,6 @@ def extract_reviews_and_scores(replies):
         "confidence"
     ]
 
-    # Initialize data dictionary
     extracted_data = {
         "reviewers": [],
         "correctness": [],
@@ -24,26 +22,23 @@ def extract_reviews_and_scores(replies):
         "confidence": []
     }
 
-    # Safeguard: Ensure all elements are valid objects
     for i, review in enumerate(replies):
         if hasattr(review, "writer") and hasattr(review, "content"):
             writer = review.writer
-            reviewer_id = writer.split('/')[-1].split('_')[-1]  # Extract reviewer ID after "_"
+            reviewer_id = writer.split('/')[-1].split('_')[-1]  
             if len(reviewer_id) == 4:
                 extracted_data["reviewers"].append(reviewer_id)
 
-            # Extract scores from content
             for field in score_fields:
-                value = review.content.get(field)  # Default to 'N/A' if field is missing
-                if value:  # Only append valid data
+                value = review.content.get(field)  
+                if value:  
                     score = value.split(':')[0].strip()  # Extract numeric score
                     extracted_data[field].append(score)
         else:
-            print(f"Skipping invalid reply at index {i}: {review}")  # Debug invalid entries
+            print(f"Skipping invalid reply at index {i}: {review}")  
 
     return extracted_data
 
-# Example Usage
 if hasattr(st.session_state, "root") and st.session_state.root.replies:
     reviews_data = extract_reviews_and_scores(st.session_state.root.replies)
     
