@@ -15,7 +15,7 @@ if 'output_files' not in st.session_state:
     st.session_state.output_files = {}
 
 if 'title' in st.session_state:
-    if not st.session_state.inconsistency_summary:
+    if st.session_state.inconsistency_summary is None:
         with st.spinner("Analyzing Inconsistencies..."):
             # Save the inconsistency summary in session state
             st.session_state.inconsistency_summary = st.session_state.chain.invoke(
