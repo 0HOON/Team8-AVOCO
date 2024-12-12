@@ -21,7 +21,7 @@ if 'title' in st.session_state:
             st.session_state.inconsistency_summary = st.session_state.chain.invoke(
                 instructions["inconsistency_summary"] + "\n\n reviews: " + st.session_state.full_text
             )
-
+        st.rerun()
     # st.write("Full Inconsistency Summary:")
 
     else:
@@ -42,71 +42,73 @@ if 'title' in st.session_state:
 
         if not summary_incons:
             st.warning("No inconsistencies found.")
+            #st.write("No inconsistencies found.")
         else:
-            num_to_show = min(2, len(summary_incons))
-            for i in range(num_to_show):
-                inconsistency_key = f"find_inconsistency{i + 1}"
-                
-                # Process each inconsistency if not already done
-                if inconsistency_key not in st.session_state:
-                    st.session_state[inconsistency_key] = st.session_state.chain.invoke(
-                        instructions["find_inconsistency_in_pdf"]
-                        + "paper text: "
-                        + st.session_state.paper_text
-                        + "inconsistency_summary: "
-                        + summary_incons[i]
-                    )
-                    st.session_state.showed_text = (
-                        f"Inconsistency {i + 1}: \n {summary_incons[i]}\n\n"
-                        f"Reviewers: \n"
-                        + reviewer_incons[i * 2]
-                        + ', '
-                        + reviewer_incons[i * 2 + 1]
-                        + "\n\n"
-                        f"Comments: \n"
-                        + comment_incons[i * 2]
-                        + ', '
-                        + comment_incons[i * 2 + 1]
-                        + "\n\n"
-                    )
-                
-                # Display the saved text
-                # st.write(st.session_state.showed_text)
-
-                if inconsistency_key in st.session_state:
-                    if f"output_file_{i}" not in st.session_state.output_files:
-                        st.session_state.find_inconsistency = st.session_state.chain.invoke(
+            with st.spinner():
+                num_to_show = min(2, len(summary_incons))
+                for i in range(num_to_show):
+                    inconsistency_key = f"find_inconsistency{i + 1}"
+                    
+                    # Process each inconsistency if not already done
+                    if inconsistency_key not in st.session_state:
+                        st.session_state[inconsistency_key] = st.session_state.chain.invoke(
                             instructions["find_inconsistency_in_pdf"]
                             + "paper text: "
                             + st.session_state.paper_text
-                            + "Inconsistency Text: "
+                            + "inconsistency_summary: "
                             + summary_incons[i]
                         )
-                        st.session_state.extracted_strings = re.findall(
-                            r'"(.*?)"', st.session_state.find_inconsistency
+                        st.session_state.showed_text = (
+                            f"Inconsistency {i + 1}: \n {summary_incons[i]}\n\n"
+                            f"Reviewers: \n"
+                            + reviewer_incons[i * 2]
+                            + ', '
+                            + reviewer_incons[i * 2 + 1]
+                            + "\n\n"
+                            f"Comments: \n"
+                            + comment_incons[i * 2]
+                            + ', '
+                            + comment_incons[i * 2 + 1]
+                            + "\n\n"
                         )
-                        # represent_input= [(inconsistency_text, reviewer_id) for inconsistency_text, reviewer_id in zip(st.session_state.extracted_strings, reviewer_incons[i * 2: i * 2 + 2])]
-                        # st.write(st.session_state.extracted_strings)
-                        output_file = represent_pdf(st.session_state.extracted_strings, reviewer_incons[i * 2: i * 2 + 2])
-                        st.session_state.output_files[f"output_file_{i}"] = output_file
                     
-                    # Display inconsistencies
-                    with st.expander(f"Inconsistency {i + 1}"):
-                        st.markdown("#### Summary")
-                        st.markdown(f"{summary_incons[i]}")
-                        st.markdown("#### Comments")
-                        with st.container(border=True):
-                            st.markdown(f"**{reviewer_incons[i * 2]}**: {comment_incons[i * 2]}")
-                        with st.container(border=True):
-                            st.markdown(f"**{reviewer_incons[i * 2 + 1]}**: {comment_incons[i * 2 + 1]}")
-                        # Show download button for each output file
-                        with open(st.session_state.output_files[f"output_file_{i}"], "rb") as pdf_file:
-                            pdf_data = pdf_file.read()
-                        st.download_button(
-                            label=f":material/download: Download Highlighted PDF for Inconsistency {i + 1}",
-                            data=pdf_data,
-                            file_name=f"inconsistency_{i + 1}_highlighted.pdf",
-                            mime="application/pdf",
-                        )
+                    # Display the saved text
+                    # st.write(st.session_state.showed_text)
+
+                    if inconsistency_key in st.session_state:
+                        if f"output_file_{i}" not in st.session_state.output_files:
+                            st.session_state.find_inconsistency = st.session_state.chain.invoke(
+                                instructions["find_inconsistency_in_pdf"]
+                                + "paper text: "
+                                + st.session_state.paper_text
+                                + "Inconsistency Text: "
+                                + summary_incons[i]
+                            )
+                            st.session_state.extracted_strings = re.findall(
+                                r'"(.*?)"', st.session_state.find_inconsistency
+                            )
+                            # represent_input= [(inconsistency_text, reviewer_id) for inconsistency_text, reviewer_id in zip(st.session_state.extracted_strings, reviewer_incons[i * 2: i * 2 + 2])]
+                            # st.write(st.session_state.extracted_strings)
+                            output_file = represent_pdf(st.session_state.extracted_strings, reviewer_incons[i * 2: i * 2 + 2])
+                            st.session_state.output_files[f"output_file_{i}"] = output_file
+                        
+                        # Display inconsistencies
+                        with st.expander(f"Inconsistency {i + 1}"):
+                            st.markdown("#### Summary")
+                            st.markdown(f"{summary_incons[i]}")
+                            st.markdown("#### Comments")
+                            with st.container(border=True):
+                                st.markdown(f"**{reviewer_incons[i * 2]}**: {comment_incons[i * 2]}")
+                            with st.container(border=True):
+                                st.markdown(f"**{reviewer_incons[i * 2 + 1]}**: {comment_incons[i * 2 + 1]}")
+                            # Show download button for each output file
+                            with open(st.session_state.output_files[f"output_file_{i}"], "rb") as pdf_file:
+                                pdf_data = pdf_file.read()
+                            st.download_button(
+                                label=f":material/download: Download Highlighted PDF for Inconsistency {i + 1}",
+                                data=pdf_data,
+                                file_name=f"inconsistency_{i + 1}_highlighted.pdf",
+                                mime="application/pdf",
+                            )
 else:
     st.write("Please enter the OpenReview URL of the paper in the sidebar.")

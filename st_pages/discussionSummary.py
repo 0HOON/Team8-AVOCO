@@ -14,22 +14,30 @@ def display_text():
         with cols[col_i]:
           with st.container(border=True):
             st.markdown(f"#### {token.capitalize()}")
-            for sentence in st.session_state.discussion_summary[token][i].strip().split(". "):
-              st.markdown(f"* {sentence}")
+            # for sentence in st.session_state.discussion_summary[token][i].strip().split(". "):
+            #   st.markdown(f"* {sentence}")
+            st.markdown(st.session_state.discussion_summary[token][i])
         col_i = (col_i + 1)%2
 
 if 'discussion_summary' in st.session_state:
   display_text()
 else:
   text = ""
-  for i, review in enumerate(st.session_state.root.replies):
-    with st.spinner(f"Analyzing Discussions... ({i+1}/{len(st.session_state.root.replies)})"):
-      if review.writer != "Authors":
+  n_discussions = 0
+  for review in st.session_state.root.replies:
+    if review.title is None:
+      n_discussions += 1
+
+  i = 0
+  for review in st.session_state.root.replies:
+    if review.title is None:
+      with st.spinner(f"Analyzing Discussions... ({i+1}/{n_discussions})"):
         text += st.session_state.chain.invoke(
           instructions["discussion_summary"] 
           + "\n\n Review and replies: " 
           + review.get_text(0, recursive=True)
         )
+    i += 1
     
   st.session_state.discussion_summary = parse_text(text, tokens["discussion_summary"])
   st.rerun()

@@ -64,15 +64,21 @@ else:
   review_out = ""
   opinion_out = ""
   review_text = ""
-  for i, review in enumerate(st.session_state.root.replies):
-    with st.spinner(f"Analyzing Reviews... ({i+1}/{len(st.session_state.root.replies)})"):
-      if review.writer != "Authors":
+  n_reviews = 0
+  for review in st.session_state.root.replies:
+    if review.title is None:
+      n_reviews += 1
+  i = 0
+  for review in st.session_state.root.replies:
+    if review.title is None:
+      with st.spinner(f"Analyzing Reviews... ({i+1}/{n_reviews})"):
         review_out += st.session_state.chain.invoke(
           instructions["review_summary"] 
           + "\n\n Full text of review: " 
           + review.get_text(0, recursive=False)
         )
         review_text += review.get_text(0, recursive=False)
+      i += 1
 
   with st.spinner(f"Analyzing Opinions..."):
     opinion_out = st.session_state.chain.invoke(
