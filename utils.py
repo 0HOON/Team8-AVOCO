@@ -256,7 +256,8 @@ def represent_pdf(search_strings, reviewers):
             page = pdf_document[page_num]
             # Search for the inconsistency text in the document
             text_instances = page.search_for(inconsistency_text)
-            
+            print(inconsistency_text)
+            print(text_instances)            
             if text_instances:
                 # Add highlights and reviewer IDs as text annotations
                 offset=0
@@ -265,19 +266,19 @@ def represent_pdf(search_strings, reviewers):
                     highlight = page.add_highlight_annot(rect)
                     highlight.update()  # Apply the highlight
 
-                    # Convert rect to (x, y) point for placing the reviewer ID text
-                    for id in reviewers:
-                      text_position = (page.rect.x0 + 10, rect.y0+(offset))  # Left margin, aligned with the top of the highlight
+                # Convert rect to (x, y) point for placing the reviewer ID text
+                for id in reviewers:
+                    text_position = (page.rect.x0 + 10, rect.y0+(offset))  # Left margin, aligned with the top of the highlight
 
-                      # Add reviewer ID as visible text
-                      page.insert_text(
-                          text_position,
-                          f"{id}",
-                          fontsize=10,  # Font size
-                          color=(0, 0, 1),  # Text color (blue)
-                          fontname="helv",  # Font name
-                      )
-                      offset+=10
+                        # Add reviewer ID as visible text
+                    page.insert_text(
+                        text_position,
+                        f"{id}",
+                        fontsize=10,  # Font size
+                        color=(0, 0, 1),  # Text color (blue)
+                        fontname="helv",  # Font name
+                    )
+                    offset+=10
 
     # Save the modified PDF
     output_filename = f"{st.session_state.title}_find_inconsistency_with_reviewers.pdf"
