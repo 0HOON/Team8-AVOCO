@@ -41,7 +41,8 @@ def main():
 
   if "paper_list" not in st.session_state:
     with st.spinner("Initializing..."):
-      st.session_state.paper_list = get_paper_list()
+      # test=True means it only shows some test cases. To show all papers, set test=False
+      st.session_state.paper_list = get_paper_list(test=True)
   
   #st.write(css, unsafe_allow_html=True)
 

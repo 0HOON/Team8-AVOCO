@@ -288,7 +288,12 @@ def represent_pdf(search_strings, reviewers):
     pdf_document.close()
     return output_filename
 
-def get_paper_list():
+def get_paper_list(test=False):
+  testcases = [
+    "An Adaptive Entropy-Regularization Framework for Multi-Agent Reinforcement Learning",
+    "AutoSparse: Towards Automated Sparse Training",
+    "Irregularity Reflection Neural Network for Time Series Forecasting"
+    ]
   file_path = "./paper_list.pkl"
   if os.path.isfile(file_path):
     with open(file_path, 'rb') as f:
@@ -298,5 +303,7 @@ def get_paper_list():
     papers = client.get_all_notes(signature='ICLR.cc/2023/Conference')
     with open(file_path, 'wb') as f:
       pickle.dump(papers, f)
+  if test:
+    papers = [x for x in papers if x.content["title"] in testcases]
   return papers
   
