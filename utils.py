@@ -50,6 +50,8 @@ instructions = {
 
   For each inconsistency, all related reveiwers and thier comments are included with each special tags (include closing token).
   Include the special tokens in your response as well. To handle the closing token correctly, here's the updated explanation and implementation with precise usage of backslashes. Make sure to match the pairs precisely because they will be parsed using special tokens. Always return the results exactly in the format I specify.
+  If there is no inconsistency at all, simply respond with \
+  No inconsistencies found. Include this exact text in your response.
   ''',
   
   "discussion_summary": 
